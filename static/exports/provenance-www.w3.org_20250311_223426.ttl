@@ -1,0 +1,13 @@
+@prefix dc: <http://purl.org/dc/elements/1.1/> .
+@prefix prov: <http://www.w3.org/ns/prov#> .
+@prefix void: <http://rdfs.org/ns/void#> .
+
+<http://crawl.data/www.w3.org_20250311_223426> prov:used <https://www.w3.org/RDF/Validator/> .
+
+<http://crawl.data/www.w3.org_20250311_223426/dataset> void:subset <https://www.w3.org/RDF/Validator/> .
+
+<https://www.w3.org/RDF/Validator/> a void:Dataset,
+        prov:Entity ;
+    dc:source <https://www.w3.org/RDF/Validator/> ;
+    void:rootResource <https://www.w3.org/RDF/Validator/> .
+

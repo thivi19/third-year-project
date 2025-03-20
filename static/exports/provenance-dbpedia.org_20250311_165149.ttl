@@ -1,0 +1,13 @@
+@prefix dc: <http://purl.org/dc/elements/1.1/> .
+@prefix prov: <http://www.w3.org/ns/prov#> .
+@prefix void: <http://rdfs.org/ns/void#> .
+
+<http://crawl.data/dbpedia.org_20250311_165149> prov:used <https://dbpedia.org/> .
+
+<http://crawl.data/dbpedia.org_20250311_165149/dataset> void:subset <https://dbpedia.org/> .
+
+<https://dbpedia.org/> a void:Dataset,
+        prov:Entity ;
+    dc:source <https://dbpedia.org/> ;
+    void:rootResource <https://dbpedia.org/> .
+

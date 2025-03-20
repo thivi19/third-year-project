@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FAIR Signposting Crawler - Visualisation</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <!-- Add D3.js library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
+    <style>
+        #graph-controls {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(255, 255, 255, 0.8);
+            padding: 5px;
+            border-radius: 4px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            z-index: 100;
+        }
+        .control-btn {
+            margin: 0 2px;
+            width: 30px;
+            height: 30px;
+            border-radius: 4px;
+            border: 1px solid #ccc;
+            background: white;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .control-btn:hover {
+            background: #f0f0f0;
+        }
+        .control-btn i {
+            font-size: 14px;
+        }
+        #graph-container {
+            position: relative;
+            width: 100%;
+            height: 600px;
+            border: 1px solid #ccc;
+            margin-top: 20px;
+            overflow: hidden;
+        }
+        #node-info {
+            position: absolute;
+            bottom: 10px;
+            left: 10px;
+            background: white;
+            padding: 10px;
+            border-radius: 4px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            max-width: 300px;
+            z-index: 100;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>FAIR Signposting Crawler</h1>
+        <nav>
+            <ul>
+                <li><a href="{{ url_for('index') }}">Home</a></li>
+                <li><a href="{{ url_for('query') }}">Query</a></li>
+                <li><a href="{{ url_for('visualise') }}" class="active">Visualise</a></li>
+                <li><a href="{{ url_for('configure') }}">Configuration</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main>
+        <section class="visualisation-section">
+            <h2>Knowledge Graph Visualisation</h2>
+            <div class="card">
+                <p>Select a named graph to visualise:</p>
+                <form id="graph-form" action="{{ url_for('visualise') }}" method="get">
+                    <div class="form-group">
+                        <label for="graph">Named Graph:</label>
+                        <select id="graph" name="graph" required>
+                            <option value="">-- Select a Graph --</option>
+                            {% for graph in graphs %}
+                            <option value="{{ graph }}" {% if request.args.get('graph') == graph %}selected{% endif %}>{{ graph }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="form-actions">
+                        <button type="submit" class="btn primary-btn">Visualise Graph</button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Add visualisation container -->
+            {% if request.args.get('graph') %}
+            <div class="card" id="visualisation-card">
+                <h3>Graph Visualisation: {{ request.args.get('graph') }}</h3>
+                <div id="graph-container">
+                    <div id="graph-controls">
+                        <button id="zoom-in" class="control-btn" title="Zoom In"><i class="fas fa-search-plus"></i></button>
+                        <button id="zoom-out" class="control-btn" title="Zoom Out"><i class="fas fa-search-minus"></i></button>
+                        <button id="reset-zoom" class="control-btn" title="Reset View"><i class="fas fa-sync"></i></button>
+                        <button id="toggle-labels" class="control-btn" title="Toggle Labels"><i class="fas fa-tags"></i></button>
+                    </div>
+                    <div id="node-info"></div>
+                </div>
+            </div>
+            {% endif %}
+
+            <div class="tip-card">
+                <h3><i class="fas fa-lightbulb"></i> Visualisation Tips</h3>
+                <ul>
+                    <li>Resource nodes can be dragged to rearrange the visualisation.</li>
+                    <li>Use the zoom controls in the top-right or scroll to zoom in and out.</li>
+                    <li>Hover over nodes to see detailed information.</li>
+                    <li>Click on a node to pin it in place (click again to unpin).</li>
+                    <li>For large graphs, consider filtering data using the query page first.</li>
+                </ul>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <p>&copy; 2025 FAIR Signposting Crawler</p>
+    </footer>
+
+    {% if request.args.get('graph') %}
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const selectedGraph = "{{ request.args.get('graph') }}";
+            
+            // Fetch graph data from API endpoint
+            fetch(`/api/graph-data?graph=${encodeURIComponent(selectedGraph)}`)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.json();
+                })
+                .then(data => createVisualisation(data))
+                .catch(error => {
+                    console.error('Error fetching graph data:', error);
+                    document.getElementById('graph-container').innerHTML = 
+                        '<div class="error-message" style="padding: 20px; color: red;">Error loading graph data: ' + error.message + '</div>';
+                });
+                
+            // Create the visualisation using D3.js
+            function createVisualisation(graphData) {
+                if (!graphData || graphData.length === 0) {
+                    document.getElementById('graph-container').innerHTML = 
+                        '<div class="error-message" style="padding: 20px; color: orange;">No data found for this graph or the graph is empty.</div>';
+                    return;
+                }
+                
+                const width = document.getElementById('graph-container').clientWidth;
+                const height = document.getElementById('graph-container').clientHeight;
+                
+                // Process the data for D3 format
+                const nodes = [];
+                const links = [];
+                const nodeMap = new Map();
+                
+                // Create nodes from subjects and objects
+                graphData.forEach(triple => {
+                    if (!nodeMap.has(triple.subject)) {
+                        nodeMap.set(triple.subject, {
+                            id: triple.subject,
+                            label: getResourceLabel(triple.subject),
+                            type: 'subject'
+                        });
+                    }
+                    
+                    if (!nodeMap.has(triple.object)) {
+                        nodeMap.set(triple.object, {
+                            id: triple.object,
+                            label: getResourceLabel(triple.object),
+                            type: 'object'
+                        });
+                    }
+                    
+                    links.push({
+                        source: triple.subject,
+                        target: triple.object,
+                        label: getPredicateLabel(triple.predicate),
+                        predicate: triple.predicate
+                    });
+                });
+                
+                // Convert nodeMap to array
+                nodeMap.forEach(node => {
+                    nodes.push(node);
+                });
+                
+                // Clear previous visualisation if any
+                const container = document.getElementById('graph-container');
+                const existingSvg = container.querySelector('svg');
+                if (existingSvg) {
+                    existingSvg.remove();
+                }
+                
+                // Create the SVG container
+                const svg = d3.select('#graph-container')
+                    .append('svg')
+                    .attr('width', width)
+                    .attr('height', height);
+                
+                // Add zoom behavior
+                const zoom = d3.zoom()
+                    .scaleExtent([0.1, 4])
+                    .on('zoom', (event) => {
+                        g.attr('transform', event.transform);
+                    });
+                
+                svg.call(zoom);
+                
+                const g = svg.append('g');
+                
+                // Create the marker for arrows
+                svg.append('defs').selectAll('marker')
+                    .data(['end'])
+                    .enter().append('marker')
+                    .attr('id', d => d)
+                    .attr('viewBox', '0 -5 10 10')
+                    .attr('refX', 25)
+                    .attr('refY', 0)
+                    .attr('markerWidth', 6)
+                    .attr('markerHeight', 6)
+                    .attr('orient', 'auto')
+                    .append('path')
+                    .attr('d', 'M0,-5L10,0L0,5')
+                    .attr('fill', '#999');
+                
+                // Create links
+                const link = g.append('g')
+                    .attr('class', 'links')
+                    .selectAll('g')
+                    .data(links)
+                    .enter().append('g');
+                
+                link.append('line')
+                    .attr('stroke', '#999')
+                    .attr('stroke-opacity', 0.6)
+                    .attr('stroke-width', 1.5)
+                    .attr('marker-end', 'url(#end)');
+                
+                // Add link labels
+                const linkText = link.append('text')
+                    .attr('dy', -5)
+                    .attr('text-anchor', 'middle')
+                    .text(d => d.label)
+                    .attr('fill', '#666')
+                    .attr('font-size', '10px')
+                    .attr('class', 'link-label');
+                
+                // Create nodes
+                const node = g.append('g')
+                    .attr('class', 'nodes')
+                    .selectAll('g')
+                    .data(nodes)
+                    .enter().append('g')
+                    .call(d3.drag()
+                        .on('start', dragstarted)
+                        .on('drag', dragged)
+                        .on('end', dragended));
+                
+                // Add circle to nodes
+                node.append('circle')
+                    .attr('r', 10)
+                    .attr('fill', d => getNodeColor(d.type))
+                    .on('mouseover', showNodeInfo)
+                    .on('mouseout', hideNodeInfo)
+                    .on('click', toggleFixNode);
+                
+                // Add labels to nodes
+                const nodeLabels = node.append('text')
+                    .attr('dy', -15)
+                    .attr('text-anchor', 'middle')
+                    .text(d => d.label)
+                    .attr('fill', '#000')
+                    .attr('font-size', '12px')
+                    .attr('class', 'node-label');
+                
+                // Create force simulation
+                const simulation = d3.forceSimulation(nodes)
+                    .force('link', d3.forceLink(links).id(d => d.id).distance(150))
+                    .force('charge', d3.forceManyBody().strength(-300))
+                    .force('center', d3.forceCenter(width / 2, height / 2));
+                
+                // Update positions on each tick
+                simulation.on('tick', () => {
+                    link.select('line')
+                        .attr('x1', d => d.source.x)
+                        .attr('y1', d => d.source.y)
+                        .attr('x2', d => d.target.x)
+                        .attr('y2', d => d.target.y);
+                    
+                    link.select('text')
+                        .attr('x', d => (d.source.x + d.target.x) / 2)
+                        .attr('y', d => (d.source.y + d.target.y) / 2);
+                    
+                    node.attr('transform', d => `translate(${d.x},${d.y})`);
+                });
+                
+                // Drag functions
+                function dragstarted(event, d) {
+                    if (!event.active) simulation.alphaTarget(0.3).restart();
+                    d.fx = d.x;
+                    d.fy = d.y;
+                }
+                
+                function dragged(event, d) {
+                    d.fx = event.x;
+                    d.fy = event.y;
+                }
+                
+                function dragended(event, d) {
+                    if (!event.active) simulation.alphaTarget(0);
+                    // Only unpin if the node isn't pinned
+                    if (!d.pinned) {
+                        d.fx = null;
+                        d.fy = null;
+                    }
+                }
+                
+                // Toggle pinning of nodes
+                function toggleFixNode(event, d) {
+                    if (d.pinned) {
+                        // Unpin the node
+                        d.pinned = false;
+                        d.fx = null;
+                        d.fy = null;
+                        d3.select(this).attr('stroke', null);
+                    } else {
+                        // Pin the node
+                        d.pinned = true;
+                        d.fx = d.x;
+                        d.fy = d.y;
+                        d3.select(this).attr('stroke', '#ff4500').attr('stroke-width', 2);
+                    }
+                }
+                
+                // Node info functions
+                function showNodeInfo(event, d) {
+                    const nodeInfo = document.getElementById('node-info');
+                    nodeInfo.innerHTML = `
+                        <h4>${d.label}</h4>
+                        <p><strong>URI:</strong> ${d.id}</p>
+                        <p><strong>Type:</strong> ${d.type}</p>
+                    `;
+                    nodeInfo.style.display = 'block';
+                }
+                
+                function hideNodeInfo() {
+                    document.getElementById('node-info').style.display = 'none';
+                }
+                
+                // Get colour based on node type
+                function getNodeColor(type) {
+                    if (type === 'subject') return '#4285F4';  // Blue for subjects
+                    return '#34A853';  // Green for objects
+                }
+                
+                // Zoom control event handlers
+                document.getElementById('zoom-in').addEventListener('click', () => {
+                    svg.transition().duration(500).call(
+                        zoom.scaleBy, 1.5
+                    );
+                });
+                
+                document.getElementById('zoom-out').addEventListener('click', () => {
+                    svg.transition().duration(500).call(
+                        zoom.scaleBy, 0.75
+                    );
+                });
+                
+                document.getElementById('reset-zoom').addEventListener('click', () => {
+                    svg.transition().duration(500).call(
+                        zoom.transform, d3.zoomIdentity
+                    );
+                });
+                
+                // Toggle labels visibility
+                let labelsVisible = true;
+                document.getElementById('toggle-labels').addEventListener('click', () => {
+                    labelsVisible = !labelsVisible;
+                    nodeLabels.style('opacity', labelsVisible ? 1 : 0);
+                    linkText.style('opacity', labelsVisible ? 1 : 0);
+                });
+            }
+            
+            // Helper functions for labels
+            function getResourceLabel(uri) {
+                // Extract the last part of the URI after the last / or #
+                try {
+                    const parsedUri = new URL(uri);
+                    const pathParts = parsedUri.pathname.split('/');
+                    return pathParts[pathParts.length - 1] || parsedUri.hostname;
+                } catch (e) {
+                    // If not a valid URL, just get the last segment
+                    const parts = uri.split(/[/#]/);
+                    return parts[parts.length - 1] || uri;
+                }
+            }
+            
+            function getPredicateLabel(uri) {
+                // Extract the last part of the predicate URI
+                const parts = uri.split(/[/#]/);
+                return parts[parts.length - 1] || uri;
+            }
+        });
+    </script>
+    {% endif %}
+</body>
+</html>

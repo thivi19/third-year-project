@@ -1,0 +1,13 @@
+@prefix dc: <http://purl.org/dc/elements/1.1/> .
+@prefix prov: <http://www.w3.org/ns/prov#> .
+@prefix void: <http://rdfs.org/ns/void#> .
+
+<http://crawl.data/dbpedia.org_20250317_131947> prov:used <https://dbpedia.org/page/Semantic_Web> .
+
+<http://crawl.data/dbpedia.org_20250317_131947/dataset> void:subset <https://dbpedia.org/page/Semantic_Web> .
+
+<https://dbpedia.org/page/Semantic_Web> a void:Dataset,
+        prov:Entity ;
+    dc:source <https://dbpedia.org/page/Semantic_Web> ;
+    void:rootResource <https://dbpedia.org/page/Semantic_Web> .
+

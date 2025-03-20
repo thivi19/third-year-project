@@ -1,0 +1,13 @@
+@prefix dc: <http://purl.org/dc/elements/1.1/> .
+@prefix prov: <http://www.w3.org/ns/prov#> .
+@prefix void: <http://rdfs.org/ns/void#> .
+
+<http://crawl.data/zenodo.org_20250311_222631> prov:used <https://zenodo.org/record/7673773> .
+
+<http://crawl.data/zenodo.org_20250311_222631/dataset> void:subset <https://zenodo.org/record/7673773> .
+
+<https://zenodo.org/record/7673773> a void:Dataset,
+        prov:Entity ;
+    dc:source <https://zenodo.org/record/7673773> ;
+    void:rootResource <https://zenodo.org/record/7673773> .
+

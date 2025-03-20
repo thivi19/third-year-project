@@ -1,0 +1,13 @@
+@prefix dc: <http://purl.org/dc/elements/1.1/> .
+@prefix prov: <http://www.w3.org/ns/prov#> .
+@prefix void: <http://rdfs.org/ns/void#> .
+
+<http://crawl.data/figshare.com_20250312_175407> prov:used <https://figshare.com/articles/dataset/Protein_Data_Bank_content_report_for_February_2020/11856261> .
+
+<http://crawl.data/figshare.com_20250312_175407/dataset> void:subset <https://figshare.com/articles/dataset/Protein_Data_Bank_content_report_for_February_2020/11856261> .
+
+<https://figshare.com/articles/dataset/Protein_Data_Bank_content_report_for_February_2020/11856261> a void:Dataset,
+        prov:Entity ;
+    dc:source <https://figshare.com/articles/dataset/Protein_Data_Bank_content_report_for_February_2020/11856261> ;
+    void:rootResource <https://figshare.com/articles/dataset/Protein_Data_Bank_content_report_for_February_2020/11856261> .
+

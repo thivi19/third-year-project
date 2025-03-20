@@ -1,0 +1,13 @@
+@prefix dc: <http://purl.org/dc/elements/1.1/> .
+@prefix prov: <http://www.w3.org/ns/prov#> .
+@prefix void: <http://rdfs.org/ns/void#> .
+
+<http://crawl.data/orcid.org_20250312_175621> prov:used <https://orcid.org/0000-0002-1825-0097> .
+
+<http://crawl.data/orcid.org_20250312_175621/dataset> void:subset <https://orcid.org/0000-0002-1825-0097> .
+
+<https://orcid.org/0000-0002-1825-0097> a void:Dataset,
+        prov:Entity ;
+    dc:source <https://orcid.org/0000-0002-1825-0097> ;
+    void:rootResource <https://orcid.org/0000-0002-1825-0097> .
+

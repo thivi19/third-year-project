@@ -1,0 +1,13 @@
+@prefix dc: <http://purl.org/dc/elements/1.1/> .
+@prefix prov: <http://www.w3.org/ns/prov#> .
+@prefix void: <http://rdfs.org/ns/void#> .
+
+<http://crawl.data/lov.linkeddata.es_20250311_223502> prov:used <https://lov.linkeddata.es/dataset/lov/> .
+
+<http://crawl.data/lov.linkeddata.es_20250311_223502/dataset> void:subset <https://lov.linkeddata.es/dataset/lov/> .
+
+<https://lov.linkeddata.es/dataset/lov/> a void:Dataset,
+        prov:Entity ;
+    dc:source <https://lov.linkeddata.es/dataset/lov/> ;
+    void:rootResource <https://lov.linkeddata.es/dataset/lov/> .
+

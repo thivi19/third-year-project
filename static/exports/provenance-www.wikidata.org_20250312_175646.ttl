@@ -1,0 +1,25 @@
+@prefix dc: <http://purl.org/dc/elements/1.1/> .
+@prefix dcterms: <http://purl.org/dc/terms/> .
+@prefix prov: <http://www.w3.org/ns/prov#> .
+@prefix schema1: <http://schema.org/> .
+@prefix void: <http://rdfs.org/ns/void#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+<http://crawl.data/www.wikidata.org_20250312_175646/dataset> void:subset <https://www.wikidata.org/wiki/Q7251>,
+        <https://www.wikidata.org/wiki/Special:EntityData/Q7251.jsonld> .
+
+<http://crawl.data/www.wikidata.org_20250312_175646> prov:used <https://www.wikidata.org/wiki/Q7251> .
+
+<https://www.wikidata.org/wiki/Special:EntityData/Q7251.jsonld> a prov:Entity ;
+    dc:source <https://www.wikidata.org/wiki/Special:EntityData/Q7251.jsonld> ;
+    dc:type "signposting:alternate" ;
+    dcterms:created "2025-03-12T17:56:58.599324"^^xsd:dateTime ;
+    schema1:position 0 ;
+    prov:value 12597 ;
+    prov:wasGeneratedBy <http://crawl.data/www.wikidata.org_20250312_175646> .
+
+<https://www.wikidata.org/wiki/Q7251> a void:Dataset,
+        prov:Entity ;
+    dc:source <https://www.wikidata.org/wiki/Q7251> ;
+    void:rootResource <https://www.wikidata.org/wiki/Q7251> .
+

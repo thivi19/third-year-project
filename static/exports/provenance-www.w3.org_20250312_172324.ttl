@@ -1,0 +1,13 @@
+@prefix dc: <http://purl.org/dc/elements/1.1/> .
+@prefix prov: <http://www.w3.org/ns/prov#> .
+@prefix void: <http://rdfs.org/ns/void#> .
+
+<http://crawl.data/www.w3.org_20250312_172324> prov:used <https://www.w3.org/TR/vocab-dcat/#example-landing-page> .
+
+<http://crawl.data/www.w3.org_20250312_172324/dataset> void:subset <https://www.w3.org/TR/vocab-dcat/#example-landing-page> .
+
+<https://www.w3.org/TR/vocab-dcat/#example-landing-page> a void:Dataset,
+        prov:Entity ;
+    dc:source <https://www.w3.org/TR/vocab-dcat/#example-landing-page> ;
+    void:rootResource <https://www.w3.org/TR/vocab-dcat/#example-landing-page> .
+

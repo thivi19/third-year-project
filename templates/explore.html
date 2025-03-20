@@ -1,0 +1,699 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Explore Resource - FAIR Signposting Crawler</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        /* Layout improvements */
+        .two-column {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            margin-top: 20px;
+        }
+        .column-main {
+            flex: 3;
+            min-width: 300px;
+        }
+        .column-side {
+            flex: 1;
+            min-width: 250px;
+        }
+        
+        /* Resource header */
+        .resource-header {
+            background-color: #f8f9fa;
+            border-left: 4px solid var(--primary-color);
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 4px;
+        }
+        .resource-title {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+        .resource-title h2 {
+            margin: 0;
+            border-bottom: none;
+            padding-bottom: 0;
+        }
+        .resource-uri {
+            word-break: break-all;
+            margin: 10px 0;
+            font-family: monospace;
+            font-size: 0.9rem;
+            background-color: rgba(0,0,0,0.05);
+            padding: 8px;
+            border-radius: 4px;
+            position: relative;
+        }
+        .resource-uri a {
+            color: var(--link-color);
+            text-decoration: none;
+            display: block;
+            padding-right: 30px; /* Space for copy button */
+        }
+        .resource-uri a:hover {
+            color: var(--hover-color);
+        }
+        .copy-btn {
+            position: absolute;
+            right: 8px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            color: var(--secondary-color);
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
+        .copy-btn:hover {
+            color: var(--primary-color);
+        }
+        
+        /* Badges */
+        .badge {
+            display: inline-block;
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 0.8rem;
+        }
+        .badge-primary {
+            background-color: var(--primary-color);
+            color: white;
+        }
+        .badge-secondary {
+            background-color: var(--secondary-color);
+            color: white;
+        }
+        .badge-info {
+            background-color: #17a2b8;
+            color: white;
+        }
+        
+        /* Cards */
+        .inner-card {
+            margin-bottom: 20px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        .inner-card .card-header {
+            background-color: #f8f9fa;
+            padding: 12px 15px;
+            border-bottom: 1px solid var(--border-color);
+            border-radius: 8px 8px 0 0;
+        }
+        .inner-card .card-header h3 {
+            margin: 0;
+            font-size: 1.1rem;
+            display: flex;
+            align-items: center;
+        }
+        .inner-card .card-header h3 i {
+            margin-right: 8px;
+            color: var(--primary-color);
+        }
+        .inner-card .card-body {
+            padding: 15px;
+        }
+        
+        /* Tables */
+        .property-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .property-table th {
+            text-align: left;
+            padding: 10px;
+            background-color: #f8f9fa;
+            border-bottom: 2px solid var(--border-color);
+        }
+        .property-table td {
+            padding: 10px;
+            border-bottom: 1px solid var(--border-color);
+            vertical-align: top;
+        }
+        .property-table tr:last-child td {
+            border-bottom: none;
+        }
+        .property-table tr:hover {
+            background-color: rgba(0,0,0,0.02);
+        }
+        
+        /* Property styles */
+        .property-name {
+            font-family: monospace;
+            font-weight: bold;
+            color: #333;
+        }
+        .property-path {
+            color: var(--secondary-color);
+            font-size: 0.85rem;
+            margin-top: 3px;
+            word-break: break-all;
+        }
+        .property-value {
+            position: relative;
+            max-width: 100%;
+            word-break: break-all;
+        }
+        .property-value a {
+            color: var(--link-color);
+            text-decoration: none;
+        }
+        .property-value a:hover {
+            color: var(--hover-color);
+            text-decoration: underline;
+        }
+        .expandable-value {
+            max-height: 100px;
+            overflow: hidden;
+            position: relative;
+        }
+        .expandable-value.expanded {
+            max-height: none;
+        }
+        .expand-btn {
+            display: block;
+            position: absolute;
+            bottom: 0;
+            right: 0;
+            background: linear-gradient(to right, transparent, white 40%);
+            padding: 2px 8px;
+            color: var(--primary-color);
+            cursor: pointer;
+            font-size: 0.8rem;
+        }
+        
+        /* Action buttons */
+        .action-btn {
+            margin-right: 8px;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+            width: 100%;
+        }
+        .action-btn i {
+            margin-right: 8px;
+            width: 16px;
+            text-align: center;
+        }
+        
+        /* Metadata */
+        .metadata-item {
+            margin-bottom: 12px;
+            border-bottom: 1px solid #f1f1f1;
+            padding-bottom: 12px;
+        }
+        .metadata-item:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+        }
+        .metadata-label {
+            font-weight: bold;
+            margin-bottom: 5px;
+            color: var(--dark-color);
+            display: block;
+        }
+        .metadata-value {
+            overflow-wrap: break-word;
+        }
+        
+        /* Stats */
+        .stats-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        .stat-item {
+            flex: 1;
+            min-width: 100px;
+            background-color: #f8f9fa;
+            border-radius: 4px;
+            padding: 10px;
+            text-align: center;
+        }
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: var(--primary-color);
+        }
+        .stat-label {
+            font-size: 0.8rem;
+            color: var(--secondary-color);
+        }
+        
+        /* Tabs for different sections */
+        .tabs {
+            display: flex;
+            border-bottom: 1px solid var(--border-color);
+            margin-bottom: 15px;
+        }
+        .tab {
+            padding: 8px 15px;
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+        }
+        .tab.active {
+            border-bottom-color: var(--primary-color);
+            font-weight: bold;
+        }
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .two-column {
+                flex-direction: column;
+            }
+            .column-main, .column-side {
+                width: 100%;
+            }
+        }
+        
+        /* Alert boxes */
+        .alert {
+            padding: 15px;
+            border-radius: 4px;
+            margin-bottom: 15px;
+            border-left: 4px solid;
+        }
+        .alert-warning {
+            background-color: #fff3cd;
+            border-left-color: #ffc107;
+            color: #856404;
+        }
+        .alert-info {
+            background-color: #d1ecf1;
+            border-left-color: #17a2b8;
+            color: #0c5460;
+        }
+        .alert-danger {
+            background-color: #f8d7da;
+            border-left-color: #dc3545;
+            color: #721c24;
+        }
+        
+        /* Breadcrumbs */
+        .breadcrumb {
+            display: flex;
+            list-style: none;
+            padding: 0;
+            margin-bottom: 15px;
+        }
+        .breadcrumb li {
+            margin-right: 5px;
+        }
+        .breadcrumb li:not(:last-child):after {
+            content: '>';
+            margin-left: 5px;
+            color: var(--secondary-color);
+        }
+        .breadcrumb a {
+            color: var(--link-color);
+            text-decoration: none;
+        }
+        .breadcrumb a:hover {
+            color: var(--hover-color);
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>FAIR Signposting Crawler</h1>
+        <nav>
+            <ul>
+                <li><a href="{{ url_for('index') }}">Home</a></li>
+                <li><a href="{{ url_for('query') }}">Query</a></li>
+                <li><a href="{{ url_for('visualise') }}">Visualise</a></li>
+                <li><a href="{{ url_for('configure') }}">Configuration</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main>
+        <section>
+            <div class="card">
+                <ul class="breadcrumb">
+                    <li><a href="{{ url_for('index') }}">Home</a></li>
+                    <li>Explore Resource</li>
+                </ul>
+                
+                <div class="resource-header">
+                    <div class="resource-title">
+                        <h2>Resource Details</h2>
+                        {% if relevance_score != "Unknown" and relevance_score != "Error" %}
+                        <span class="badge badge-primary">Relevance: {{ relevance_score }}</span>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="resource-uri">
+                        <a href="{{ resource_uri }}" target="_blank" title="View original resource">
+                            {{ resource_uri }}
+                        </a>
+                        <button class="copy-btn" title="Copy URI" onclick="copyToClipboard('{{ resource_uri }}')">
+                            <i class="fas fa-copy"></i>
+                        </button>
+                    </div>
+                    
+                    <div class="stats-container">
+                        <div class="stat-item">
+                            <div class="stat-value" id="outbound-count">
+                                {% if outbound.results and outbound.results.bindings %}
+                                    {{ outbound.results.bindings|length }}
+                                {% else %}
+                                    0
+                                {% endif %}
+                            </div>
+                            <div class="stat-label">Outbound Properties</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value" id="inbound-count">
+                                {% if inbound.results and inbound.results.bindings %}
+                                    {{ inbound.results.bindings|length }}
+                                {% else %}
+                                    0
+                                {% endif %}
+                            </div>
+                            <div class="stat-label">Inbound References</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value" id="resource-types">
+                                {% set type_count = 0 %}
+                                {% for binding in outbound.results.bindings %}
+                                    {% if binding.p.value.endswith('type') %}
+                                        {% set type_count = type_count + 1 %}
+                                    {% endif %}
+                                {% endfor %}
+                                {{ type_count }}
+                            </div>
+                            <div class="stat-label">Resource Types</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="tabs">
+                    <div class="tab active" data-tab="actions">
+                        <i class="fas fa-tools"></i> Actions & Metadata
+                    </div>
+                    <div class="tab" data-tab="properties">
+                        <i class="fas fa-sitemap"></i> Resource Properties
+                    </div>
+                    <div class="tab" data-tab="references">
+                        <i class="fas fa-link"></i> Inbound References
+                    </div>
+                </div>
+                
+                <!-- Actions Tab Content -->
+                <div class="tab-content active" id="actions-tab">
+                    <div class="two-column">
+                        <div class="column-main">
+                            <div class="inner-card">
+                                <div class="card-header">
+                                    <h3><i class="fas fa-tools"></i> Actions</h3>
+                                </div>
+                                <div class="card-body">
+                                    <form action="/continue-crawl" method="post" style="margin-bottom: 15px;">
+                                        <input type="hidden" name="resource_uri" value="{{ resource_uri }}">
+                                        <button type="submit" class="btn primary-btn action-btn">
+                                            <i class="fas fa-spider"></i> Continue Crawl from Here
+                                        </button>
+                                    </form>
+                                    
+                                    <a href="{{ resource_uri }}" target="_blank" class="btn secondary-btn action-btn">
+                                        <i class="fas fa-external-link-alt"></i> View Original Resource
+                                    </a>
+                                    
+                                    <a href="/fair-assessment/{{ resource_uri|replace('http://', '') }}" class="btn secondary-btn action-btn">
+                                        <i class="fas fa-check-circle"></i> FAIR Assessment
+                                    </a>
+                                    
+                                    <a href="/query" class="btn secondary-btn action-btn">
+                                        <i class="fas fa-search"></i> Query Knowledge Graph
+                                    </a>
+                                    
+                                    <a href="/visualise?graph={{ resource_uri|urlencode }}" class="btn secondary-btn action-btn">
+                                        <i class="fas fa-project-diagram"></i> Visualize Graph
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="column-side">
+                            <div class="inner-card">
+                                <div class="card-header">
+                                    <h3><i class="fas fa-info-circle"></i> Resource Metadata</h3>
+                                </div>
+                                <div class="card-body">
+                                    <div class="metadata-item">
+                                        <span class="metadata-label">URI:</span>
+                                        <div class="metadata-value">{{ resource_uri }}</div>
+                                    </div>
+                                    
+                                    <div class="metadata-item">
+                                        <span class="metadata-label">Relevance Score:</span>
+                                        <div class="metadata-value">{{ relevance_score }}</div>
+                                    </div>
+                                    
+                                    <div class="metadata-item">
+                                        <span class="metadata-label">Resource Types:</span>
+                                        <div class="metadata-value">
+                                            {% set found_types = [] %}
+                                            {% for binding in outbound.results.bindings %}
+                                                {% if binding.p.value.endswith('type') %}
+                                                    {% set type_name = binding.o.value.split('/')[-1].split('#')[-1] %}
+                                                    {% if type_name not in found_types %}
+                                                        <span class="badge badge-info">{{ type_name }}</span>
+                                                        {% set found_types = found_types + [type_name] %}
+                                                    {% endif %}
+                                                {% endif %}
+                                            {% endfor %}
+                                            
+                                            {% if found_types|length == 0 %}
+                                                <span class="text-muted">No explicit type</span>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                    
+                                    <div id="metadata-container"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Properties Tab Content -->
+                <div class="tab-content" id="properties-tab">
+                    {% if outbound.error %}
+                    <div class="alert alert-danger">
+                        <i class="fas fa-exclamation-circle"></i> {{ outbound.error }}
+                    </div>
+                    {% elif outbound.results.bindings %}
+                    <div class="property-filter">
+                        <input type="text" id="property-filter" placeholder="Filter properties..." class="form-control">
+                    </div>
+                    
+                    <table class="property-table" id="properties-table">
+                        <thead>
+                            <tr>
+                                <th>Property</th>
+                                <th>Value</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for binding in outbound.results.bindings %}
+                            <tr class="property-row">
+                                <td width="35%">
+                                    <div class="property-name" title="{{ binding.p.value }}">
+                                        {{ binding.p.value.split('/')[-1].split('#')[-1] }}
+                                    </div>
+                                    <div class="property-path">{{ binding.p.value }}</div>
+                                </td>
+                                <td width="65%">
+                                    <div class="property-value" data-original="{{ binding.o.value }}">
+                                        {% if binding.o.type == 'uri' %}
+                                        <a href="/explore/{{ binding.o.value[7:] if binding.o.value.startswith('http://') else binding.o.value }}" title="Explore this resource">
+                                            {{ binding.o.value }}
+                                        </a>
+                                        {% else %}
+                                        <div class="{% if binding.o.value|length > 100 %}expandable-value{% endif %}" data-full-text="{{ binding.o.value }}">
+                                            {{ binding.o.value }}
+                                            {% if binding.o.value|length > 100 %}
+                                            <span class="expand-btn">Show more</span>
+                                            {% endif %}
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                    {% else %}
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle"></i> No outbound properties found for this resource.
+                    </div>
+                    {% endif %}
+                </div>
+                
+                <!-- References Tab Content -->
+                <div class="tab-content" id="references-tab">
+                    {% if inbound.error %}
+                    <div class="alert alert-danger">
+                        <i class="fas fa-exclamation-circle"></i> {{ inbound.error }}
+                    </div>
+                    {% elif inbound.results.bindings %}
+                    <div class="property-filter">
+                        <input type="text" id="reference-filter" placeholder="Filter references..." class="form-control">
+                    </div>
+                    
+                    <table class="property-table" id="references-table">
+                        <thead>
+                            <tr>
+                                <th>Resource</th>
+                                <th>Property</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for binding in inbound.results.bindings %}
+                            <tr class="reference-row">
+                                <td width="65%">
+                                    <div class="property-value">
+                                        <a href="/explore/{{ binding.s.value[7:] if binding.s.value.startswith('http://') else binding.s.value }}" title="Explore this resource">
+                                            {{ binding.s.value }}
+                                        </a>
+                                    </div>
+                                </td>
+                                <td width="35%">
+                                    <div class="property-name" title="{{ binding.p.value }}">
+                                        {{ binding.p.value.split('/')[-1].split('#')[-1] }}
+                                    </div>
+                                    <div class="property-path">{{ binding.p.value }}</div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                    {% else %}
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle"></i> No inbound references found for this resource.
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </section>
+        
+    </main>
+
+    <footer>
+        <p>&copy; 2025 FAIR Signposting Crawler</p>
+    </footer>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Tab functionality
+            document.querySelectorAll('.tab').forEach(function(tab) {
+                tab.addEventListener('click', function() {
+                    // Remove active class from all tabs
+                    document.querySelectorAll('.tab').forEach(function(t) {
+                        t.classList.remove('active');
+                    });
+                    
+                    // Add active class to clicked tab
+                    this.classList.add('active');
+                    
+                    // Hide all tab content
+                    document.querySelectorAll('.tab-content').forEach(function(content) {
+                        content.classList.remove('active');
+                    });
+                    
+                    // Show corresponding tab content
+                    const tabId = this.getAttribute('data-tab');
+                    document.getElementById(tabId + '-tab').classList.add('active');
+                });
+            });
+            
+            // Expandable text functionality
+            document.querySelectorAll('.expandable-value').forEach(function(el) {
+                const expandBtn = el.querySelector('.expand-btn');
+                if (expandBtn) {
+                    expandBtn.addEventListener('click', function(e) {
+                        e.stopPropagation();
+                        el.classList.toggle('expanded');
+                        if (el.classList.contains('expanded')) {
+                            expandBtn.textContent = 'Show less';
+                        } else {
+                            expandBtn.textContent = 'Show more';
+                        }
+                    });
+                }
+            });
+            
+            // Property filter functionality
+            const propertyFilter = document.getElementById('property-filter');
+            if (propertyFilter) {
+                propertyFilter.addEventListener('input', function() {
+                    const filterText = this.value.toLowerCase();
+                    document.querySelectorAll('#properties-table .property-row').forEach(function(row) {
+                        const propertyName = row.querySelector('.property-name').textContent.toLowerCase();
+                        const propertyPath = row.querySelector('.property-path').textContent.toLowerCase();
+                        const propertyValue = row.querySelector('.property-value').getAttribute('data-original')?.toLowerCase() || '';
+                        
+                        if (propertyName.includes(filterText) || propertyPath.includes(filterText) || propertyValue.includes(filterText)) {
+                            row.style.display = '';
+                        } else {
+                            row.style.display = 'none';
+                        }
+                    });
+                });
+            }
+            
+            // Reference filter functionality
+            const referenceFilter = document.getElementById('reference-filter');
+            if (referenceFilter) {
+                referenceFilter.addEventListener('input', function() {
+                    const filterText = this.value.toLowerCase();
+                    document.querySelectorAll('#references-table .reference-row').forEach(function(row) {
+                        const resourceUri = row.querySelector('.property-value a').textContent.toLowerCase();
+                        const propertyName = row.querySelector('.property-name').textContent.toLowerCase();
+                        
+                        if (resourceUri.includes(filterText) || propertyName.includes(filterText)) {
+                            row.style.display = '';
+                        } else {
+                            row.style.display = 'none';
+                        }
+                    });
+                });
+            }
+        });
+        
+        // Copy to clipboard function
+        function copyToClipboard(text) {
+            navigator.clipboard.writeText(text).then(function() {
+                const copyBtn = document.querySelector('.copy-btn');
+                const originalIcon = copyBtn.innerHTML;
+                copyBtn.innerHTML = '<i class="fas fa-check"></i>';
+                setTimeout(function() {
+                    copyBtn.innerHTML = originalIcon;
+                }, 2000);
+            }, function(err) {
+                console.error('Could not copy text: ', err);
+            });
+        }
+    </script>
+</body>
+</html>

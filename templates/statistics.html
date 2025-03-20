@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Crawl Statistics - FAIR Signposting Crawler</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        .chart-container {
+            position: relative;
+            height: 300px;
+            margin-bottom: 20px;
+        }
+        .stat-card {
+            border-left: 4px solid #4682B4;
+            transition: transform 0.2s;
+        }
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+        }
+        .stat-value {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: #4682B4;
+        }
+        .stat-label {
+            color: #6c757d;
+            font-size: 1rem;
+        }
+        .table-stats th {
+            background-color: #f8f9fa;
+        }
+    </style>
+</head>
+<body>
+    <div class="container my-4">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="/">Home</a></li>
+                <li class="breadcrumb-item"><a href="/results/{{ crawl_id }}">Crawl Results</a></li>
+                <li class="breadcrumb-item active" aria-current="page">Statistics</li>
+            </ol>
+        </nav>
+        
+        <div class="card mb-4">
+            <div class="card-header bg-primary text-white">
+                <h3><i class="fas fa-chart-bar me-2"></i>Crawl Statistics <small class="text-light">ID: {{ crawl_id }}</small></h3>
+            </div>
+            
+            <div class="card-body">
+                <div class="row mb-4">
+                    <div class="col-md-3">
+                        <div class="card stat-card">
+                            <div class="card-body text-center">
+                                <div class="stat-value">{{ provenance.resources_visited }}</div>
+                                <div class="stat-label">Resources Visited</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card stat-card">
+                            <div class="card-body text-center">
+                                <div class="stat-value">{{ provenance.triples_collected }}</div>
+                                <div class="stat-label">Triples Collected</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card stat-card">
+                            <div class="card-body text-center">
+                                <div class="stat-value">{{ stats.found }}</div>
+                                <div class="stat-label">Signposting Links</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card stat-card">
+                            <div class="card-body text-center">
+                                <div class="stat-value">{{ stats.fallback_used }}</div>
+                                <div class="stat-label">Fallback Methods</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <h4 class="mb-3"><i class="fas fa-globe me-2"></i>Domain Distribution</h4>
+                <div class="row">
+                    <div class="col-md-8">
+                        <div class="chart-container">
+                            <canvas id="domain-chart"></canvas>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card">
+                            <div class="card-header">Top Domains</div>
+                            <div class="card-body p-0">
+                                <table class="table table-sm mb-0">
+                                    <thead>
+                                        <tr>
+                                            <th>Domain</th>
+                                            <th>Resources</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for domain, count in domain_stats.items() %}
+                                            {% if loop.index <= 5 %}
+                                                <tr>
+                                                    <td>{{ domain }}</td>
+                                                    <td>{{ count }}</td>
+                                                </tr>
+                                            {% endif %}
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="row mt-4">
+                    <div class="col-md-6">
+                        <h4 class="mb-3"><i class="fas fa-file-code me-2"></i>Format Distribution</h4>
+                        <div class="chart-container">
+                            <canvas id="format-chart"></canvas>
+                        </div>
+                        <div class="table-responsive mt-3">
+                            <table class="table table-sm table-hover table-stats">
+                                <thead>
+                                    <tr>
+                                        <th>Format</th>
+                                        <th>Count</th>
+                                        <th>Percentage</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for fmt, count in format_stats.items() %}
+                                        <tr>
+                                            <td>{{ fmt }}</td>
+                                            <td>{{ count }}</td>
+                                            <td>{{ (count / provenance.resources_visited * 100)|round(1) }}%</td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <h4 class="mb-3"><i class="fas fa-link me-2"></i>Relation Type Distribution</h4>
+                        <div class="chart-container">
+                            <canvas id="rel-chart"></canvas>
+                        </div>
+                        <div class="table-responsive mt-3">
+                            <table class="table table-sm table-hover table-stats">
+                                <thead>
+                                    <tr>
+                                        <th>Relation Type</th>
+                                        <th>Count</th>
+                                        <th>Percentage</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for rel, count in rel_stats.items() %}
+                                        <tr>
+                                            <td>{{ rel }}</td>
+                                            <td>{{ count }}</td>
+                                            <td>{{ (count / (stats.found + stats.fallback_used) * 100)|round(1) }}%</td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="row mt-4">
+                    <div class="col-md-12">
+                        <h4 class="mb-3"><i class="fas fa-file-alt me-2"></i>MIME Type Distribution</h4>
+                        <div class="chart-container">
+                            <canvas id="mime-chart"></canvas>
+                        </div>
+                        <div class="table-responsive mt-3">
+                            <table class="table table-sm table-hover table-stats">
+                                <thead>
+                                    <tr>
+                                        <th>MIME Type</th>
+                                        <th>Count</th>
+                                        <th>Percentage</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for mime, count in mime_stats.items() %}
+                                        <tr>
+                                            <td>{{ mime }}</td>
+                                            <td>{{ count }}</td>
+                                            <td>{{ (count / provenance.resources_visited * 100)|round(1) }}%</td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card-footer">
+                <a href="/" class="btn btn-primary">
+                    <i class="fas fa-home me-1"></i> Home
+                </a>
+                <a href="/results/{{ crawl_id }}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left me-1"></i> Back to Results
+                </a>
+                <a href="/export-provenance" class="btn btn-success">
+                    <i class="fas fa-file-export me-1"></i> Export Provenance
+                </a>
+            </div>
+        </div>
+    </div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Parse the chart data from server-provided JSON strings
+            let domainChartData = JSON.parse('{{ domain_chart_data|safe }}');
+            let formatChartData = JSON.parse('{{ format_chart_data|safe }}');
+            let mimeChartData = JSON.parse('{{ mime_chart_data|safe }}');
+            let relChartData = JSON.parse('{{ rel_chart_data|safe }}');
+            
+            // Domain distribution chart
+            new Chart(document.getElementById('domain-chart'), {
+                type: 'bar',
+                data: {
+                    labels: domainChartData.map(item => item.domain),
+                    datasets: [{
+                        label: 'Resources per Domain',
+                        data: domainChartData.map(item => item.count),
+                        backgroundColor: '#4682B4',
+                        borderColor: '#4682B4',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+            
+            // Format distribution chart
+            new Chart(document.getElementById('format-chart'), {
+                type: 'pie',
+                data: {
+                    labels: formatChartData.map(item => item.format),
+                    datasets: [{
+                        data: formatChartData.map(item => item.count),
+                        backgroundColor: [
+                            '#4e73df', '#1cc88a', '#36b9cc', '#f6c23e', '#e74a3b',
+                            '#858796', '#5a5c69', '#2e59d9', '#17a673', '#2c9faf'
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false
+                }
+            });
+            
+            // MIME type distribution chart
+            new Chart(document.getElementById('mime-chart'), {
+                type: 'polarArea',
+                data: {
+                    labels: mimeChartData.map(item => item.mime),
+                    datasets: [{
+                        data: mimeChartData.map(item => item.count),
+                        backgroundColor: [
+                            'rgba(78, 115, 223, 0.7)', 
+                            'rgba(28, 200, 138, 0.7)', 
+                            'rgba(54, 185, 204, 0.7)',
+                            'rgba(246, 194, 62, 0.7)', 
+                            'rgba(231, 74, 59, 0.7)',
+                            'rgba(133, 135, 150, 0.7)'
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false
+                }
+            });
+            
+            // Relation type distribution chart
+            new Chart(document.getElementById('rel-chart'), {
+                type: 'doughnut',
+                data: {
+                    labels: relChartData.map(item => item.relation),
+                    datasets: [{
+                        data: relChartData.map(item => item.count),
+                        backgroundColor: [
+                            '#4e73df', '#1cc88a', '#36b9cc', '#f6c23e', '#e74a3b',
+                            '#858796', '#5a5c69', '#2e59d9', '#17a673', '#2c9faf'
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false
+                }
+            });
+        });
+    </script>
+</body>
+</html>

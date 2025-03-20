@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Crawl Results - FAIR Signposting Crawler</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        .resource-card {
+            margin-bottom: 15px;
+            transition: transform 0.2s;
+        }
+        .resource-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+        }
+        .badge-count {
+            font-size: 1rem;
+            padding: 0.35em 0.65em;
+        }
+        .stat-icon {
+            width: 24px;
+            text-align: center;
+            margin-right: 8px;
+        }
+        .resource-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-top: 10px;
+        }
+        .resource-meta-item {
+            display: flex;
+            align-items: center;
+        }
+        .crawl-summary-card {
+            background-color: #f8f9fa;
+            border-left: 4px solid #4682B4;
+        }
+        .triples-badge {
+            background-color: #4682B4;
+        }
+        .action-btn {
+            margin-right: 8px;
+        }
+        .resource-details {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease-out;
+        }
+        .resource-details.show {
+            max-height: 500px;
+        }
+        .filter-controls {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        .stats-chart-container {
+            height: 200px;
+            margin-bottom: 20px;
+        }
+        .copy-tooltip {
+            position: relative;
+            display: inline-block;
+        }
+        .copy-tooltip .tooltiptext {
+            visibility: hidden;
+            width: 80px;
+            background-color: #555;
+            color: #fff;
+            text-align: center;
+            border-radius: 6px;
+            padding: 5px;
+            position: absolute;
+            z-index: 1;
+            bottom: 125%;
+            left: 50%;
+            margin-left: -40px;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        .copy-tooltip .tooltiptext::after {
+            content: "";
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            margin-left: -5px;
+            border-width: 5px;
+            border-style: solid;
+            border-color: #555 transparent transparent transparent;
+        }
+        .copy-tooltip:hover .tooltiptext {
+            visibility: visible;
+            opacity: 1;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <nav aria-label="breadcrumb" class="mt-4">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="/">Home</a></li>
+                <li class="breadcrumb-item active" aria-current="page">Crawl Results</li>
+            </ol>
+        </nav>
+        
+        <div class="card mb-4">
+            <div class="card-header bg-primary text-white">
+                <h3><i class="fas fa-chart-network me-2"></i>Crawl Results <small class="text-light">ID: {{ crawl_id }}</small></h3>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="card crawl-summary-card mb-4">
+                            <div class="card-body">
+                                <h4><i class="fas fa-info-circle me-2"></i>Crawl Summary</h4>
+                                <table class="table table-borderless">
+                                    <tbody>
+                                        <tr>
+                                            <th><i class="fas fa-link stat-icon"></i>Seed URL</th>
+                                            <td>
+                                                <a href="{{ provenance.seed_urls[0] if provenance.seed_urls else '#' }}" target="_blank">
+                                                    {{ provenance.seed_urls[0] if provenance.seed_urls else "N/A" }}
+                                                </a>
+                                                <span class="copy-url-btn" data-url="{{ provenance.seed_urls[0] if provenance.seed_urls else '' }}">
+                                                    <i class="fas fa-copy ms-2" style="cursor: pointer;"></i>
+                                                </span>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <th><i class="fas fa-clock stat-icon"></i>Duration</th>
+                                            <td>{{ duration }}</td>
+                                        </tr>
+                                        <tr>
+                                            <th><i class="fas fa-database stat-icon"></i>Triples Collected</th>
+                                            <td><span class="badge bg-primary badge-count">{{ provenance.triples_collected }}</span></td>
+                                        </tr>
+                                        <tr>
+                                            <th><i class="fas fa-globe stat-icon"></i>Resources Visited</th>
+                                            <td><span class="badge bg-secondary badge-count">{{ provenance.resources_visited }}</span></td>
+                                        </tr>
+                                        <tr>
+                                            <th><i class="fas fa-project-diagram stat-icon"></i>Total Triples</th>
+                                            <td><span class="badge bg-success badge-count">{{ total_triples }}</span></td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <div class="card mb-4">
+                            <div class="card-body">
+                                <h4><i class="fas fa-route me-2"></i>Signposting Statistics</h4>
+                                
+                                <div class="stats-chart-container">
+                                    <canvas id="crawl-stats-chart"
+                                            data-signposting-found="{{ stats.found }}" 
+                                            data-fallback-used="{{ stats.fallback_used }}">
+                                    ></canvas>
+                                </div>
+                                
+                                <div class="d-flex justify-content-around text-center my-3">
+                                    <div>
+                                        <div class="h2">{{ stats.found }}</div>
+                                        <div>Signposting Links Found</div>
+                                    </div>
+                                    <div>
+                                        <div class="h2">{{ stats.fallback_used }}</div>
+                                        <div>Fallback Methods Used</div>
+                                    </div>
+                                </div>
+                                
+                                <h4 class="mt-4"><i class="fas fa-tools me-2"></i>Actions</h4>
+                                <div class="d-flex flex-wrap mt-3">
+                                    <a href="/export-provenance" class="btn btn-primary me-2 mb-2">
+                                        <i class="fas fa-file-export me-1"></i> Export Provenance
+                                    </a>
+                                    <a href="/query" class="btn btn-success me-2 mb-2">
+                                        <i class="fas fa-search me-1"></i> Query Data
+                                    </a>
+                                    <a href="/visualise" class="btn btn-info mb-2">
+                                        <i class="fas fa-project-diagram me-1"></i> Visualise Graphs
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <h4 class="mt-4 mb-3"><i class="fas fa-spider me-2"></i>Discovered Resources</h4>
+                
+                {% if provenance.resources %}
+                    <div class="filter-controls">
+                        <div class="row">
+                            <div class="col-md-4 mb-2">
+                                <label for="filter-resources" class="form-label"><i class="fas fa-filter me-1"></i>Filter by:</label>
+                                <input type="text" id="filter-resources" class="form-control" placeholder="Type to filter resources...">
+                            </div>
+                            <div class="col-md-4 mb-2">
+                                <label for="sort-resources" class="form-label"><i class="fas fa-sort me-1"></i>Sort by:</label>
+                                <select id="sort-resources" class="form-select">
+                                    <option value="default">Default order</option>
+                                    <option value="triples">Most triples</option>
+                                    <option value="name">Resource name</option>
+                                    <option value="timestamp">Timestamp</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4 mb-2">
+                                <label for="filter-type" class="form-label"><i class="fas fa-tag me-1"></i>Filter by type:</label>
+                                <select id="filter-type" class="form-select">
+                                    <option value="all">All types</option>
+                                    {% set types = [] %}
+                                    {% for resource in provenance.resources %}
+                                        {% if resource.source_type not in types %}
+                                            {% set _ = types.append(resource.source_type) %}
+                                        {% endif %}
+                                    {% endfor %}
+                                    {% for type in types %}
+                                        <option value="{{ type }}">{{ type }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div id="resources-container">
+                        {% for resource in provenance.resources %}
+                        <div class="card resource-card" data-source-type="{{ resource.source_type }}" data-triple-count="{{ resource.triple_count }}" data-timestamp="{{ resource.timestamp }}">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <h5 class="card-title">
+                                        <a href="{{ resource.url }}" target="_blank" class="text-decoration-none">
+                                            {{ resource.url }}
+                                        </a>
+                                        <button class="btn btn-sm btn-link copy-url-btn p-0 ms-2" data-url="{{ resource.url }}">
+                                            <span class="copy-tooltip">
+                                                <i class="fas fa-copy"></i>
+                                                <span class="tooltiptext">Copy URL</span>
+                                            </span>
+                                        </button>
+                                    </h5>
+                                    <span class="badge triples-badge">{{ resource.triple_count }} triples</span>
+                                </div>
+                                
+                                <div class="resource-meta">
+                                    <div class="resource-meta-item">
+                                        <i class="fas fa-sitemap stat-icon text-primary"></i>
+                                        <span>{{ resource.source_type }}</span>
+                                    </div>
+                                    <div class="resource-meta-item">
+                                        <i class="fas fa-layer-group stat-icon text-success"></i>
+                                        <span>Depth: {{ resource.crawl_depth }}</span>
+                                    </div>
+                                    {% if resource.format %}
+                                    <div class="resource-meta-item">
+                                        <i class="fas fa-file-code stat-icon text-info"></i>
+                                        <span>Format: {{ resource.format }}</span>
+                                    </div>
+                                    {% endif %}
+                                    <div class="resource-meta-item">
+                                        <i class="fas fa-calendar-alt stat-icon text-secondary"></i>
+                                        <span>{{ resource.timestamp }}</span>
+                                    </div>
+                                </div>
+                                
+                                <div class="mt-3 d-flex justify-content-between">
+                                    <div>
+                                        <a href="/explore/{{ resource.url|replace('http://', '') }}" class="btn btn-sm btn-outline-primary action-btn">
+                                            <i class="fas fa-search me-1"></i> Explore
+                                        </a>
+                                        <form action="/continue-crawl" method="post" class="d-inline">
+                                            <input type="hidden" name="resource_uri" value="{{ resource.url }}">
+                                            <button type="submit" class="btn btn-sm btn-outline-success action-btn">
+                                                <i class="fas fa-expand-arrows-alt me-1"></i> Expand From Here
+                                            </button>
+                                        </form>
+                                        <a href="/fair-assessment/{{ resource.url|replace('http://', '') }}" class="btn btn-sm btn-outline-info action-btn">
+                                            <i class="fas fa-check-circle me-1"></i> FAIR Assessment
+                                        </a>
+                                    </div>
+                                    <button class="btn btn-sm btn-outline-secondary expand-details">
+                                        <i class="fas fa-chevron-down"></i> Show Details
+                                    </button>
+                                </div>
+                                
+                                <div class="resource-details mt-3 pt-3 border-top">
+                                    <h6>Technical Details:</h6>
+                                    <table class="table table-sm">
+                                        <tbody>
+                                            {% if resource.content_type %}
+                                            <tr>
+                                                <th>Content-Type:</th>
+                                                <td>{{ resource.content_type }}</td>
+                                            </tr>
+                                            {% endif %}
+                                            <tr>
+                                                <th>Source Type:</th>
+                                                <td>{{ resource.source_type }}</td>
+                                            </tr>
+                                            <tr>
+                                                <th>Triple Count:</th>
+                                                <td>{{ resource.triple_count }}</td>
+                                            </tr>
+                                            <tr>
+                                                <th>Crawl Depth:</th>
+                                                <td>{{ resource.crawl_depth }}</td>
+                                            </tr>
+                                            <tr>
+                                                <th>Timestamp:</th>
+                                                <td>{{ resource.timestamp }}</td>
+                                            </tr>
+                                            {% if resource.id %}
+                                            <tr>
+                                                <th>Resource ID:</th>
+                                                <td>{{ resource.id }}</td>
+                                            </tr>
+                                            {% endif %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    
+                    <div class="text-center mt-4" id="pagination-controls">
+                        <button id="load-more-btn" class="btn btn-outline-primary">
+                            <i class="fas fa-plus-circle me-1"></i> Load More Resources
+                        </button>
+                    </div>
+                {% else %}
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle me-2"></i> No resources were successfully crawled. Try a different seed URL or check your crawler configuration.
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Interactive features for the results page
+        document.addEventListener('DOMContentLoaded', function() {
+            
+            // 1. Resource filtering
+            const filterInput = document.getElementById('filter-resources');
+            if (filterInput) {
+                filterInput.addEventListener('input', function() {
+                    const filterValue = this.value.toLowerCase();
+                    document.querySelectorAll('.resource-card').forEach(function(card) {
+                        const shouldShow = card.textContent.toLowerCase().includes(filterValue);
+                        card.style.display = shouldShow ? 'block' : 'none';
+                    });
+                    updateVisibleCount();
+                });
+            }
+            
+            // 2. Resource type filtering
+            const typeFilter = document.getElementById('filter-type');
+            if (typeFilter) {
+                typeFilter.addEventListener('change', function() {
+                    const filterValue = this.value;
+                    document.querySelectorAll('.resource-card').forEach(function(card) {
+                        if (filterValue === 'all') {
+                            card.style.display = 'block';
+                        } else {
+                            const sourceType = card.getAttribute('data-source-type');
+                            card.style.display = sourceType === filterValue ? 'block' : 'none';
+                        }
+                    });
+                    updateVisibleCount();
+                });
+            }
+            
+            // 3. Resource sorting
+            const sortSelect = document.getElementById('sort-resources');
+            if (sortSelect) {
+                sortSelect.addEventListener('change', function() {
+                    const sortBy = this.value;
+                    const container = document.getElementById('resources-container');
+                    const cards = Array.from(container.querySelectorAll('.resource-card'));
+                    
+                    cards.sort(function(a, b) {
+                        if (sortBy === 'triples') {
+                            return parseInt(b.getAttribute('data-triple-count')) - 
+                                   parseInt(a.getAttribute('data-triple-count'));
+                        } else if (sortBy === 'name') {
+                            return a.querySelector('.card-title').textContent.trim()
+                                .localeCompare(b.querySelector('.card-title').textContent.trim());
+                        } else if (sortBy === 'timestamp') {
+                            return a.getAttribute('data-timestamp')
+                                .localeCompare(b.getAttribute('data-timestamp'));
+                        }
+                        return 0;
+                    });
+                    
+                    // Reorder the cards
+                    cards.forEach(function(card) {
+                        container.appendChild(card);
+                    });
+                    
+                    // Reset pagination
+                    resetPagination();
+                });
+            }
+            
+            // 4. Expandable resource details
+            document.querySelectorAll('.expand-details').forEach(function(button) {
+                button.addEventListener('click', function() {
+                    const detailsSection = this.closest('.card-body').querySelector('.resource-details');
+                    detailsSection.classList.toggle('show');
+                    
+                    if (detailsSection.classList.contains('show')) {
+                        this.innerHTML = '<i class="fas fa-chevron-up"></i> Hide Details';
+                    } else {
+                        this.innerHTML = '<i class="fas fa-chevron-down"></i> Show Details';
+                    }
+                });
+            });
+            
+            // 5. Copy to clipboard functionality
+            document.querySelectorAll('.copy-url-btn').forEach(function(btn) {
+                btn.addEventListener('click', function() {
+                    const url = this.getAttribute('data-url');
+                    navigator.clipboard.writeText(url).then(function() {
+                        // Show success message
+                        const tooltip = btn.querySelector('.tooltiptext');
+                        if (tooltip) {
+                            tooltip.textContent = 'Copied!';
+                            setTimeout(function() {
+                                tooltip.textContent = 'Copy URL';
+                            }, 2000);
+                        }
+                    });
+                });
+            });
+            
+            // 6. loading / pagination
+            const resourceCards = document.querySelectorAll('.resource-card');
+            let visibleResources = 5; // Initial number of visible resources
+            
+            function updateVisibleCount() {
+                // Count visible cards (not filtered out)
+                const visibleCards = Array.from(resourceCards).filter(
+                    function(card) { return card.style.display !== 'none'; }
+                );
+                
+                // Show/hide load more button
+                const loadMoreBtn = document.getElementById('load-more-btn');
+                if (loadMoreBtn) {
+                    loadMoreBtn.style.display = visibleCards.length <= visibleResources ? 'none' : 'inline-block';
+                }
+            }
+            
+            function showVisibleResources() {
+                let count = 0;
+                resourceCards.forEach(function(card) {
+                    // If the card is already hidden by a filter, leave it hidden
+                    if (card.style.display !== 'none') {
+                        if (count < visibleResources) {
+                            card.style.display = 'block';
+                            count++;
+                        } else {
+                            card.style.display = 'none';
+                        }
+                    }
+                });
+                
+                updateVisibleCount();
+            }
+            
+            function resetPagination() {
+                visibleResources = 5; // Reset to initial count
+                showVisibleResources();
+            }
+            
+            const loadMoreBtn = document.getElementById('load-more-btn');
+            if (loadMoreBtn) {
+                loadMoreBtn.addEventListener('click', function() {
+                    visibleResources += 5;
+                    showVisibleResources();
+                });
+            }
+            
+            // Initialise pagination
+            if (resourceCards.length > 0) {
+                showVisibleResources();
+            }
+            
+            // 7. Statistics visualisation with Chart.js
+            const statsChart = document.getElementById('crawl-stats-chart');
+            if (statsChart) {
+                // Get the values from data attributes instead of template variables
+                const signpostingFound = parseInt(statsChart.getAttribute('data-signposting-found') || 0);
+                const fallbackUsed = parseInt(statsChart.getAttribute('data-fallback-used') || 0);
+                
+                new Chart(statsChart, {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['Signposting Links', 'Fallback Methods'],
+                        datasets: [{
+                            data: [signpostingFound, fallbackUsed],
+                            backgroundColor: ['#4682B4', '#FF6384'],
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'bottom'
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        const label = context.label || '';
+                                        const value = context.raw || 0;
+                                        return label + ': ' + value;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+        });
+    </script>
+</body>
+</html>

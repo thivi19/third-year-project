@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FAIR Signposting Crawler</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body>
+    <header>
+        <h1>FAIR Signposting Crawler</h1>
+        <nav>
+            <ul>
+                <li><a href="{{ url_for('index') }}" class="active">Home</a></li>
+                <li><a href="{{ url_for('query') }}">Query</a></li>
+                <li><a href="{{ url_for('visualise') }}">Visualise</a></li>
+                <li><a href="{{ url_for('configure') }}">Configuration</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main>
+        <section class="intro-section">
+            <div class="card">
+                <h2>Welcome to the FAIR Signposting Crawler</h2>
+                <p>This tool allows you to crawl the web following FAIR Signposting links, building a knowledge graph from Linked Data resources.</p>
+                <br>
+                <p>Signposting is a simple approach to make navigational links explicit for machine consumption, using existing Web standards. It helps bridge the gap between human-readable Web representations and machine-actionable FAIR (Findable, Accessible, Interoperable, Reusable) data.</p>
+            </div>
+        </section>
+
+        <section class="start-crawl-section">
+            <h2>Start a New Crawl</h2>
+            <div class="card">
+                <form id="crawl-form" action="{{ url_for('start_crawl') }}" method="post">
+                    <div class="form-group">
+                        <label for="seed_url">Seed URL:</label>
+                        <input type="url" id="seed_url" name="seed_url" placeholder="https://example.org/resource" required>
+                    </div>
+                    
+                    <div class="form-advanced">
+                        <h3>Advanced Options</h3>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="max_depth">Max Depth:</label>
+                                <input type="number" id="max_depth" name="max_depth" value="{{ config['MAX_CRAWL_DEPTH'] }}" min="1" max="10">
+                            </div>
+                            <div class="form-group">
+                                <label for="max_resources">Max Resources Per Level:</label>
+                                <input type="number" id="max_resources" name="max_resources" value="{{ config['MAX_RESOURCES_PER_LEVEL'] }}" min="1" max="50">
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="relevance_threshold">Relevance Threshold:</label>
+                                <input type="number" id="relevance_threshold" name="relevance_threshold" value="{{ config['RELEVANCE_THRESHOLD'] }}" min="0" max="1" step="0.1">
+                            </div>
+                            <div class="form-group">
+                                <label for="timeout">Timeout (seconds):</label>
+                                <input type="number" id="timeout" name="timeout" value="{{ config['CRAWL_TIMEOUT'] }}" min="30" max="3600">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-actions">
+                        <button type="submit" class="btn primary-btn">Start Crawling</button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Progress Bar Section (initially hidden) -->
+            <div id="crawl-progress" class="card mt-4" style="display: none;">
+                <div class="card-header">
+                    <h3>Crawl Progress</h3>
+                </div>
+                <div class="card-body">
+                    <div class="progress-container">
+                        <div class="progress-bar">
+                            <div id="progress-fill" class="progress-fill"></div>
+                        </div>
+                        <div id="progress-percent" class="progress-percent">0%</div>
+                    </div>
+                    <div class="progress-stats">
+                        <div class="stat-item">
+                            <span class="stat-label">Status:</span>
+                            <span id="crawl-status" class="stat-value">Starting...</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Resources Visited:</span>
+                            <span id="resources-visited" class="stat-value">0</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Triples Collected:</span>
+                            <span id="triples-collected" class="stat-value">0</span>
+                        </div>
+                    </div>
+                    <!-- View Results button will be added here dynamically when crawl completes -->
+                </div>
+            </div>
+            
+            <div class="tip-card">
+                <h3><i class="fas fa-lightbulb"></i> Crawling Tips</h3>
+                <ul>
+                    <li>Start with known FAIR data repositories or research data portals.</li>
+                    <li>Good seed URLs: research data repositories, dataset landing pages, or resources with known FAIR implementations.</li>
+                    <li>Lower relevance threshold to include more resources, or increase to be more selective.</li>
+                    <li>For large repositories, limiting crawl depth can prevent excessive resource consumption.</li>
+                </ul>
+            </div>
+        </section>
+        
+        {% if crawl_active %}
+        <section class="active-crawl-section">
+            <h2>Active Crawl</h2>
+            <div class="card">
+                <div class="crawl-status">
+                    <div class="status-icon">
+                        <i class="fas fa-sync fa-spin"></i>
+                    </div>
+                    <div class="status-text">
+                        <p>A crawl is currently in progress.</p>
+                        <p>Crawl ID: {{ crawl_id }}</p>
+                    </div>
+                </div>
+                <div class="view-results-link">
+                    <a href="{{ url_for('results', crawl_id=crawl_id) }}" class="btn secondary-btn">View Current Results</a>
+                </div>
+            </div>
+        </section>
+        {% endif %}
+    </main>
+
+    <footer>
+        <p>&copy; 2025 FAIR Signposting Crawler</p>
+    </footer>
+
+       
+    <script>
+        // Toggle advanced options
+        document.querySelector('.form-advanced h3').addEventListener('click', function() {
+            const advancedSection = this.parentElement;
+            advancedSection.classList.toggle('expanded');
+        });
+    
+        // Crawl Progress Handler
+        document.getElementById('crawl-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            // Show progress UI
+            document.getElementById('crawl-progress').style.display = 'block';
+            document.getElementById('crawl-status').textContent = 'Starting crawl...';
+            document.getElementById('progress-fill').style.width = '5%';
+            document.getElementById('progress-percent').textContent = '5%';
+            
+            // Submit the form in the background
+            const formData = new FormData(this);
+            
+            fetch(this.action, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            }).then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                // Don't redirect yet, handle that when the crawl is complete
+                return response.json();
+            }).catch(error => {
+                console.error('Error submitting form:', error);
+                document.getElementById('crawl-status').textContent = 'Error: ' + error.message;
+            });
+            
+            // Start polling for status updates
+            setTimeout(checkCrawlStatus, 1000);
+        });
+    
+        // Last progress value for smooth animation
+        let lastProgress = 5;
+        let statusCheckCount = 0;
+        let progressIncrement = 0.5;
+    
+        // Function to update progress UI with animation
+        function updateProgressUI(data) {
+            console.log("Status update:", data);  // Add logging to debug
+            if (data.active) {
+                // Show the progress section
+                document.getElementById('crawl-progress').style.display = 'block';
+                
+                // Calculate a smooth progress value
+                let targetProgress = data.progress;
+                
+                // If server reports the same progress multiple times, add small increments to show activity
+                if (targetProgress <= lastProgress) {
+                    statusCheckCount++;
+                    if (statusCheckCount > 5) {
+                        // After 5 status checks with no progress, add tiny increment
+                        lastProgress += progressIncrement;
+                        // Slow down increments the longer we're at the same progress
+                        progressIncrement = Math.max(0.1, progressIncrement * 0.95);
+                    }
+                } else {
+                    // Reset when we get real progress
+                    statusCheckCount = 0;
+                    progressIncrement = 0.5;
+                    lastProgress = targetProgress;
+                }
+                
+                // Cap progress at 99% until complete
+                const displayProgress = Math.min(99, lastProgress);
+                
+                // Animate progress bar
+                const progressBar = document.getElementById('progress-fill');
+                progressBar.style.width = displayProgress + '%';
+                document.getElementById('progress-percent').textContent = Math.round(displayProgress) + '%';
+                
+                // Add pulse animation when progress is slow
+                if (statusCheckCount > 10) {
+                    progressBar.classList.add('pulse-animation');
+                } else {
+                    progressBar.classList.remove('pulse-animation');
+                }
+                
+                // Update status text
+                document.getElementById('crawl-status').textContent = data.status;
+                document.getElementById('resources-visited').textContent = data.resources_visited;
+                document.getElementById('triples-collected').textContent = data.triples_collected;
+                
+                // Continue polling if still active
+                setTimeout(checkCrawlStatus, 1000);
+    
+            } else if (data.complete || data.crawl_id) {
+                console.log("Crawl complete, showing results button for:", data.crawl_id);
+                
+                // Show 100% completion
+                document.getElementById('progress-fill').style.width = '100%';
+                document.getElementById('progress-percent').textContent = '100%';
+                document.getElementById('crawl-status').textContent = 'Crawl completed!';
+                
+                // Disable the pulse animation if it was active
+                document.getElementById('progress-fill').classList.remove('pulse-animation');
+                
+                // Instead of automatic redirect, add a button to view results
+                const progressStats = document.querySelector('.progress-stats');
+                
+                // First, remove any existing results buttons
+                const existingButton = document.getElementById('view-results-button');
+                if (existingButton) {
+                    existingButton.remove();
+                }
+                
+                // Create results button
+                const resultsButton = document.createElement('div');
+                resultsButton.id = 'view-results-button';
+                resultsButton.className = 'view-results-container';
+                resultsButton.innerHTML = `
+                    <button class="btn primary-btn" onclick="window.location.href='/results/${data.crawl_id}'">
+                        <i class="fas fa-chart-bar"></i> View Crawl Results
+                    </button>
+                `;
+                
+                // Insert after progress stats
+                progressStats.parentNode.insertBefore(resultsButton, progressStats.nextSibling);
+                
+                // Apply some CSS styles to ensure button stands out
+                resultsButton.style.marginTop = '20px';
+                resultsButton.style.textAlign = 'center';
+                const button = resultsButton.querySelector('button');
+                button.style.padding = '12px 24px';
+                button.style.fontSize = '16px';
+                button.style.fontWeight = 'bold';
+            }
+        }
+    
+        function redirectToResults(crawlId) {
+            window.location.href = '/results/' + crawlId;
+        }
+    
+        // Function to check crawl status
+        function checkCrawlStatus() {
+            fetch('/api/crawl-status')
+                .then(response => response.json())
+                .then(data => {
+                    updateProgressUI(data);
+                })
+                .catch(error => {
+                    console.error('Error checking crawl status:', error);
+                    // Retry after a delay even on error
+                    setTimeout(checkCrawlStatus, 2000);
+                });
+        }
+    </script>
+</body>
+</html>

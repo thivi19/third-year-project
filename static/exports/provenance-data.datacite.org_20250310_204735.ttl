@@ -1,0 +1,50 @@
+@prefix dc: <http://purl.org/dc/elements/1.1/> .
+@prefix dcterms: <http://purl.org/dc/terms/> .
+@prefix foaf: <http://xmlns.com/foaf/0.1/> .
+@prefix prov: <http://www.w3.org/ns/prov#> .
+@prefix schema1: <http://schema.org/> .
+@prefix void: <http://rdfs.org/ns/void#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+<http://example.org/dataset/data.datacite.org_20250310_204735> a void:Dataset,
+        prov:Entity ;
+    dc:source <http://example.org/stats/data.datacite.org_20250310_204735> ;
+    dc:title "Knowledge Graph from FAIR Crawl data.datacite.org_20250310_204735" ;
+    dcterms:created "2025-03-10T20:47:41.027886"^^xsd:dateTime ;
+    void:entities 0 ;
+    void:subset <http://example.org/domain/data.datacite.org_20250310_204735/0>,
+        <http://example.org/seed/data.datacite.org_20250310_204735/0> ;
+    void:triples 0 ;
+    prov:wasGeneratedBy <http://example.org/crawl/data.datacite.org_20250310_204735> .
+
+<http://example.org/agent/FAIRSignpostingCrawler> a prov:SoftwareAgent,
+        foaf:Agent ;
+    dc:description "A web crawler that follows Signposting links to discover FAIR data" ;
+    prov:actedOnBehalfOf <http://example.org/organization/YourOrganization> ;
+    foaf:name "FAIR Signposting Crawler" .
+
+<http://example.org/crawl/data.datacite.org_20250310_204735> a prov:Activity ;
+    dc:description "A web crawl following FAIR Signposting links to build a knowledge graph" ;
+    dc:title "FAIR Signposting Crawl data.datacite.org_20250310_204735" ;
+    schema1:duration 5.673581 ;
+    prov:endedAtTime "2025-03-10T20:47:41.027886"^^xsd:dateTime ;
+    prov:generated <http://example.org/stats/data.datacite.org_20250310_204735> ;
+    prov:startedAtTime "2025-03-10T20:47:35.354305"^^xsd:dateTime ;
+    prov:used <http://example.org/seed/data.datacite.org_20250310_204735/0> ;
+    prov:wasAssociatedWith <http://example.org/agent/FAIRSignpostingCrawler> .
+
+<http://example.org/domain/data.datacite.org_20250310_204735/0> a prov:Entity ;
+    void:entities 1 ;
+    schema1:URL "http://data.datacite.org" ;
+    foaf:name "data.datacite.org" .
+
+<http://example.org/seed/data.datacite.org_20250310_204735/0> a void:Dataset,
+        prov:Entity ;
+    dc:source <https://data.datacite.org/> ;
+    void:rootResource <https://data.datacite.org/> .
+
+<http://example.org/stats/data.datacite.org_20250310_204735> a prov:Entity ;
+    schema1:fallbackUsed 0 ;
+    schema1:name "Signposting Statistics" ;
+    schema1:signpostingFound 1 .
+

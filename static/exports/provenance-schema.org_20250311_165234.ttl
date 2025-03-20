@@ -1,0 +1,14 @@
+@prefix dc: <http://purl.org/dc/elements/1.1/> .
+@prefix prov: <http://www.w3.org/ns/prov#> .
+@prefix schema: <https://schema.org/> .
+@prefix void: <http://rdfs.org/ns/void#> .
+
+<http://crawl.data/schema.org_20250311_165234> prov:used schema:Person .
+
+<http://crawl.data/schema.org_20250311_165234/dataset> void:subset schema:Person .
+
+schema:Person a void:Dataset,
+        prov:Entity ;
+    dc:source schema:Person ;
+    void:rootResource schema:Person .
+

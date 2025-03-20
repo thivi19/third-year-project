@@ -1,0 +1,463 @@
+/* Base styles */
+:root {
+    --primary-color: #4682B4;
+    --secondary-color: #6c757d;
+    --success-color: #28a745;
+    --warning-color: #ffc107;
+    --danger-color: #dc3545;
+    --light-color: #f8f9fa;
+    --dark-color: #343a40;
+    --border-color: #ddd;
+    --text-color: #333;
+    --link-color: #0066cc;
+    --hover-color: #5192c7;
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    line-height: 1.6;
+    color: var(--text-color);
+    background-color: #f5f5f5;
+}
+
+/* Header and navigation */
+header {
+    background-color: var(--primary-color);
+    color: white;
+    padding: 1rem 2rem;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+header h1 {
+    margin-bottom: 1rem;
+}
+
+nav ul {
+    list-style: none;
+    display: flex;
+    gap: 20px;
+}
+
+nav ul li a {
+    color: rgba(255, 255, 255, 0.9);
+    text-decoration: none;
+    padding: 0.5rem 1rem;
+    border-radius: 4px;
+    transition: all 0.3s ease;
+}
+
+nav ul li a:hover {
+    background-color: rgba(255, 255, 255, 0.2);
+}
+
+nav ul li a.active {
+    background-color: rgba(255, 255, 255, 0.3);
+    font-weight: 600;
+}
+
+/* Main content */
+main {
+    max-width: 1200px;
+    margin: 2rem auto;
+    padding: 0 1rem;
+}
+
+section {
+    margin-bottom: 2rem;
+}
+
+h2 {
+    margin-bottom: 1rem;
+    color: var(--dark-color);
+    border-bottom: 2px solid var(--primary-color);
+    padding-bottom: 0.5rem;
+}
+
+h3 {
+    margin: 1rem 0;
+    color: var(--dark-color);
+}
+
+/* Cards */
+.card {
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.card-header {
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 1rem;
+    margin-bottom: 1rem;
+}
+
+.card-body {
+    padding: 0.5rem 0;
+}
+
+.tip-card {
+    background-color: #f8f9f1;
+    border-left: 4px solid var(--warning-color);
+    border-radius: 4px;
+    padding: 1rem 1.5rem;
+}
+
+.tip-card h3 {
+    display: flex;
+    align-items: center;
+    color: var(--dark-color);
+}
+
+.tip-card h3 i {
+    color: var(--warning-color);
+    margin-right: 0.5rem;
+}
+
+.tip-card ul {
+    margin-left: 1.5rem;
+}
+
+.status-card {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem;
+    background-color: var(--light-color);
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+}
+
+.status-card .success {
+    color: var(--success-color);
+}
+
+.status-card .error {
+    color: var(--danger-color);
+}
+
+.hidden {
+    display: none !important;
+}
+
+/* Forms */
+.form-group {
+    margin-bottom: 1rem;
+}
+
+.form-row {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.form-row .form-group {
+    flex: 1;
+    min-width: 200px;
+}
+
+label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+}
+
+input, select, textarea {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    font-size: 1rem;
+}
+
+input:focus, select:focus, textarea:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 2px rgba(70, 130, 180, 0.2);
+}
+
+.form-actions {
+    margin-top: 1.5rem;
+    display: flex;
+    gap: 1rem;
+}
+
+.form-advanced h3 {
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+}
+
+.form-advanced h3:after {
+    content: '\f078';
+    font-family: 'Font Awesome 5 Free';
+    font-weight: 900;
+    margin-left: 0.5rem;
+    font-size: 0.8rem;
+}
+
+.form-advanced .form-row {
+    display: none;
+}
+
+.form-advanced.expanded .form-row {
+    display: flex;
+}
+
+.form-advanced.expanded h3:after {
+    content: '\f077';
+}
+
+/* Buttons */
+.btn {
+    padding: 0.75rem 1.5rem;
+    border: none;
+    border-radius: 4px;
+    font-size: 1rem;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    transition: all 0.3s ease;
+    text-decoration: none;
+}
+
+.btn i {
+    font-size: 0.9rem;
+}
+
+.primary-btn {
+    background-color: var(--primary-color);
+    color: white;
+}
+
+.primary-btn:hover {
+    background-color: var(--hover-color);
+}
+
+.secondary-btn {
+    background-color: var(--secondary-color);
+    color: white;
+}
+
+.secondary-btn:hover {
+    background-color: #5a6268;
+}
+
+.danger-btn {
+    background-color: var(--danger-color);
+    color: white;
+}
+
+.danger-btn:hover {
+    background-color: #c82333;
+}
+
+.icon-btn {
+    padding: 0.5rem 1rem;
+    background-color: var(--light-color);
+    color: var(--dark-color);
+    border: 1px solid var(--border-color);
+}
+
+.icon-btn:hover {
+    background-color: #e9ecef;
+}
+
+.link-btn {
+    background: none;
+    color: var(--link-color);
+    padding: 0.5rem 1rem;
+    text-decoration: underline;
+}
+
+.link-btn:hover {
+    color: var(--hover-color);
+    background-color: rgba(0, 102, 204, 0.05);
+}
+
+.small-btn {
+    padding: 0.3rem 0.7rem;
+    font-size: 0.9rem;
+}
+
+/* Tables */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 1rem 0;
+}
+
+th, td {
+    padding: 0.75rem;
+    border: 1px solid var(--border-color);
+}
+
+th {
+    background-color: var(--light-color);
+    font-weight: 600;
+}
+
+/* Progress Bar Styles */
+.progress-container {
+    margin-bottom: 20px;
+}
+
+.progress-bar {
+    background-color: #f1f1f1;
+    border-radius: 4px;
+    height: 20px;
+    width: 100%;
+    position: relative;
+    margin-bottom: 10px;
+    overflow: hidden;
+}
+
+.progress-fill {
+    background-color: var(--success-color);
+    height: 100%;
+    width: 0;
+    transition: width 0.5s ease-out;
+    position: absolute;
+    left: 0;
+    top: 0;
+    
+    /* Gradient to make it look better */
+    background-image: linear-gradient(
+        -45deg,
+        rgba(255, 255, 255, 0.15) 25%,
+        transparent 25%,
+        transparent 50%,
+        rgba(255, 255, 255, 0.15) 50%,
+        rgba(255, 255, 255, 0.15) 75%,
+        transparent 75%,
+        transparent
+    );
+    background-size: 1rem 1rem;
+}
+
+/* Pulsing animation for when progress seems stalled */
+@keyframes progress-pulse {
+    0% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.7;
+    }
+    100% {
+        opacity: 1;
+    }
+}
+
+.pulse-animation {
+    animation: progress-pulse 1.5s infinite;
+}
+
+/* Smoother transitions for percentage text */
+.progress-percent {
+    text-align: center;
+    font-weight: bold;
+    margin-bottom: 15px;
+    transition: color 0.3s ease;
+}
+
+/* Style for completed progress */
+.progress-bar.completed .progress-fill {
+    background-color: var(--success-color);
+    box-shadow: 0 0 5px rgba(40, 167, 69, 0.5);
+}
+
+.progress-stats {
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    margin-bottom: 20px;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 15px;
+}
+
+.stat-item {
+    flex: 1;
+    min-width: 150px;
+    margin-bottom: 10px;
+}
+
+.stat-label {
+    font-weight: bold;
+    display: block;
+    margin-bottom: 5px;
+    color: var(--secondary-color);
+}
+
+.stat-value {
+    display: block;
+    font-size: 1.1rem;
+}
+
+/* Active Crawl Status */
+.crawl-status {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    padding: 1rem;
+}
+
+.status-icon {
+    font-size: 1.5rem;
+    color: var(--primary-color);
+}
+
+.status-text {
+    flex: 1;
+}
+
+.view-results-link {
+    text-align: right;
+    padding: 1rem;
+    border-top: 1px solid var(--border-color);
+}
+
+/* Make sure the progress bar doesn't get too crowded on small screens */
+@media (max-width: 768px) {
+    .progress-stats {
+        flex-direction: column;
+    }
+    
+    .stat-item {
+        margin-bottom: 15px;
+    }
+    
+    .form-row {
+        flex-direction: column;
+    }
+    
+    nav ul {
+        flex-direction: column;
+        gap: 10px;
+    }
+    
+    .form-actions {
+        flex-direction: column;
+    }
+    
+    .btn {
+        width: 100%;
+    }
+}
+
+/* Utility Classes */
+.mt-4 {
+    margin-top: 1.5rem;
+}
+
+.mb-3 {
+    margin-bottom: 1rem;
+}

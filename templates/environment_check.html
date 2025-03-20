@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Environment Check - FAIR Signposting Crawler</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        .check-item {
+            margin-bottom: 1rem;
+            border-radius: 5px;
+            overflow: hidden;
+        }
+        .check-header {
+            padding: 0.75rem 1.25rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+        }
+        .check-body {
+            padding: 1.25rem;
+            background-color: #fff;
+            border: 1px solid rgba(0,0,0,.125);
+            border-top: none;
+        }
+        .check-ok {
+            background-color: #d4edda;
+            color: #155724;
+            border-color: #c3e6cb;
+        }
+        .check-warning {
+            background-color: #fff3cd;
+            color: #856404;
+            border-color: #ffeeba;
+        }
+        .check-error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border-color: #f5c6cb;
+        }
+        .check-unknown {
+            background-color: #e2e3e5;
+            color: #383d41;
+            border-color: #d6d8db;
+        }
+        .details-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+        }
+        .details-table th,
+        .details-table td {
+            padding: 0.5rem;
+            border: 1px solid #dee2e6;
+        }
+        .details-table th {
+            background-color: #f8f9fa;
+        }
+        .check-icon {
+            font-size: 1.5rem;
+            margin-right: 0.5rem;
+        }
+        .check-info {
+            flex: 1;
+        }
+        .check-toggle {
+            font-size: 1.2rem;
+        }
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>FAIR Signposting Crawler</h1>
+        <nav>
+            <ul>
+                <li><a href="{{ url_for('index') }}">Home</a></li>
+                <li><a href="{{ url_for('query') }}">Query</a></li>
+                <li><a href="{{ url_for('visualise') }}">Visualise</a></li>
+                <li><a href="{{ url_for('configure') }}">Configuration</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main>
+        <section class="intro-section">
+            <div class="card">
+                <h2>Environment Check</h2>
+                <p>This page performs a comprehensive check of your system environment to ensure that all components of the FAIR Signposting Crawler are configured correctly.</p>
+            </div>
+        </section>
+
+        <section class="environment-check-section">
+            <h2>System Checks</h2>
+            
+            <!-- Fuseki Check -->
+            <div class="check-item">
+                <div class="check-header {{ 'check-ok' if checks.fuseki.status == 'ok' else 'check-warning' if checks.fuseki.status == 'warning' else 'check-error' if checks.fuseki.status == 'error' else 'check-unknown' }}">
+                    <div class="check-info">
+                        <i class="check-icon fas {{ 'fa-check-circle' if checks.fuseki.status == 'ok' else 'fa-exclamation-triangle' if checks.fuseki.status == 'warning' else 'fa-times-circle' if checks.fuseki.status == 'error' else 'fa-question-circle' }}"></i>
+                        <span>Fuseki Connection</span>
+                    </div>
+                    <div class="check-toggle">
+                        <i class="fas fa-chevron-down"></i>
+                    </div>
+                </div>
+                <div class="check-body hidden">
+                    <p><strong>Status:</strong> {{ checks.fuseki.message }}</p>
+                    
+                    {% if checks.fuseki.details %}
+                    <table class="details-table">
+                        <thead>
+                            <tr>
+                                <th>Item</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for key, value in checks.fuseki.details.items() %}
+                            <tr>
+                                <td>{{ key }}</td>
+                                <td>{{ value }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                    {% endif %}
+                    
+                    <div class="mt-3">
+                        <p><strong>Recommendations:</strong></p>
+                        <ul>
+                            {% if checks.fuseki.status == 'ok' %}
+                            <li>Fuseki is properly configured and functioning correctly.</li>
+                            {% elif checks.fuseki.status == 'warning' %}
+                            <li>Check if the dataset "{{ checks.fuseki.details.get('dataset', 'knowledge_graph') }}" exists in Fuseki.</li>
+                            <li>Verify that the dataset has the correct permissions.</li>
+                            {% elif checks.fuseki.status == 'error' %}
+                            <li>Ensure Fuseki is running at the configured endpoint.</li>
+                            <li>Check network connectivity between the crawler and Fuseki.</li>
+                            <li>Verify Fuseki configuration in the Configuration page.</li>
+                            {% endif %}
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Modules Check -->
+            <div class="check-item">
+                <div class="check-header {{ 'check-ok' if checks.modules.status == 'ok' else 'check-warning' if checks.modules.status == 'warning' else 'check-error' if checks.modules.status == 'error' else 'check-unknown' }}">
+                    <div class="check-info">
+                        <i class="check-icon fas {{ 'fa-check-circle' if checks.modules.status == 'ok' else 'fa-exclamation-triangle' if checks.modules.status == 'warning' else 'fa-times-circle' if checks.modules.status == 'error' else 'fa-question-circle' }}"></i>
+                        <span>Python Modules</span>
+                    </div>
+                    <div class="check-toggle">
+                        <i class="fas fa-chevron-down"></i>
+                    </div>
+                </div>
+                <div class="check-body hidden">
+                    <p><strong>Status:</strong> {{ checks.modules.message }}</p>
+                    
+                    {% if checks.modules.details %}
+                    <h4>Required Modules</h4>
+                    <table class="details-table">
+                        <thead>
+                            <tr>
+                                <th>Module</th>
+                                <th>Status</th>
+                                {% if checks.modules.details.get('rdflib_version') %}
+                                <th>Version</th>
+                                {% endif %}
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for module, installed in checks.modules.details.get('required', {}).items() %}
+                            <tr>
+                                <td>{{ module }}</td>
+                                <td>
+                                    {% if installed %}
+                                    <span class="text-success"><i class="fas fa-check"></i> Installed</span>
+                                    {% else %}
+                                    <span class="text-danger"><i class="fas fa-times"></i> Missing</span>
+                                    {% endif %}
+                                </td>
+                                {% if checks.modules.details.get(module + '_version') %}
+                                <td>{{ checks.modules.details.get(module + '_version') }}</td>
+                                {% endif %}
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                    
+                    <h4 class="mt-3">Optional Modules</h4>
+                    <table class="details-table">
+                        <thead>
+                            <tr>
+                                <th>Module</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for module, installed in checks.modules.details.get('optional', {}).items() %}
+                            <tr>
+                                <td>{{ module }}</td>
+                                <td>
+                                    {% if installed %}
+                                    <span class="text-success"><i class="fas fa-check"></i> Installed</span>
+                                    {% else %}
+                                    <span class="text-warning"><i class="fas fa-exclamation-triangle"></i> Not installed</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                    {% endif %}
+                    
+                    <div class="mt-3">
+                        <p><strong>Recommendations:</strong></p>
+                        <ul>
+                            {% if checks.modules.status == 'ok' %}
+                            <li>All required modules are properly installed.</li>
+                            {% if not checks.modules.details.get('optional', {}).get('rdflib_microdata', True) %}
+                            <li>Consider installing rdflib_microdata for improved microdata/schema.org support: <code>pip install rdflib-microdata</code></li>
+                            {% endif %}
+                            {% elif checks.modules.status == 'error' %}
+                            <li>Install missing required modules using pip: <code>pip install MODULE_NAME</code></li>
+                            {% endif %}
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- RDF Formats Check -->
+            <div class="check-item">
+                <div class="check-header {{ 'check-ok' if checks.rdf_formats.status == 'ok' else 'check-warning' if checks.rdf_formats.status == 'warning' else 'check-error' if checks.rdf_formats.status == 'error' else 'check-unknown' }}">
+                    <div class="check-info">
+                        <i class="check-icon fas {{ 'fa-check-circle' if checks.rdf_formats.status == 'ok' else 'fa-exclamation-triangle' if checks.rdf_formats.status == 'warning' else 'fa-times-circle' if checks.rdf_formats.status == 'error' else 'fa-question-circle' }}"></i>
+                        <span>RDF Format Support</span>
+                    </div>
+                    <div class="check-toggle">
+                        <i class="fas fa-chevron-down"></i>
+                    </div>
+                </div>
+                <div class="check-body hidden">
+                    <p><strong>Status:</strong> {{ checks.rdf_formats.message }}</p>
+                    
+                    {% if checks.rdf_formats.details %}
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h4>Supported Parsers</h4>
+                            <ul>
+                                {% for parser in checks.rdf_formats.details.get('parsers', []) %}
+                                <li>{{ parser }}</li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <h4>Supported Serializers</h4>
+                            <ul>
+                                {% for serializer in checks.rdf_formats.details.get('serializers', []) %}
+                                <li>{{ serializer }}</li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    </div>
+                    {% endif %}
+                    
+                    <div class="mt-3">
+                        <p><strong>Recommendations:</strong></p>
+                        <ul>
+                            {% if checks.rdf_formats.status == 'ok' %}
+                            <li>RDF format support is comprehensive.</li>
+                            {% elif checks.rdf_formats.status == 'warning' %}
+                            <li>Some RDF formats are missing. Consider upgrading rdflib or installing additional plugins.</li>
+                            {% elif checks.rdf_formats.status == 'error' %}
+                            <li>Critical RDF format support is missing. Reinstall rdflib with all dependencies.</li>
+                            {% endif %}
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Network Check -->
+            <div class="check-item">
+                <div class="check-header {{ 'check-ok' if checks.network.status == 'ok' else 'check-warning' if checks.network.status == 'warning' else 'check-error' if checks.network.status == 'error' else 'check-unknown' }}">
+                    <div class="check-info">
+                        <i class="check-icon fas {{ 'fa-check-circle' if checks.network.status == 'ok' else 'fa-exclamation-triangle' if checks.network.status == 'warning' else 'fa-times-circle' if checks.network.status == 'error' else 'fa-question-circle' }}"></i>
+                        <span>Network Connectivity</span>
+                    </div>
+                    <div class="check-toggle">
+                        <i class="fas fa-chevron-down"></i>
+                    </div>
+                </div>
+                <div class="check-body hidden">
+                    <p><strong>Status:</strong> {{ checks.network.message }}</p>
+                    
+                    {% if checks.network.details %}
+                    <table class="details-table">
+                        <thead>
+                            <tr>
+                                <th>Test URL</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for url, result in checks.network.details.items() %}
+                            <tr>
+                                <td>{{ url }}</td>
+                                <td>
+                                    {% if result.ok %}
+                                    <span class="text-success"><i class="fas fa-check"></i> OK ({{ result.status if result.status is number else '' }})</span>
+                                    {% else %}
+                                    <span class="text-danger"><i class="fas fa-times"></i> Failed{% if result.message %}: {{ result.message }}{% endif %}</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                    {% endif %}
+                    
+                    <div class="mt-3">
+                        <p><strong>Recommendations:</strong></p>
+                        <ul>
+                            {% if checks.network.status == 'ok' %}
+                            <li>Network connectivity is good.</li>
+                            {% elif checks.network.status == 'warning' %}
+                            <li>Some network tests failed. Check your internet connection and firewall settings.</li>
+                            {% elif checks.network.status == 'error' %}
+                            <li>Major network connectivity issues detected. The crawler requires internet access to function.</li>
+                            <li>Check your proxy settings, firewall, and network connection.</li>
+                            {% endif %}
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Storage Check -->
+            <div class="check-item">
+                <div class="check-header {{ 'check-ok' if checks.storage.status == 'ok' else 'check-warning' if checks.storage.status == 'warning' else 'check-error' if checks.storage.status == 'error' else 'check-unknown' }}">
+                    <div class="check-info">
+                        <i class="check-icon fas {{ 'fa-check-circle' if checks.storage.status == 'ok' else 'fa-exclamation-triangle' if checks.storage.status == 'warning' else 'fa-times-circle' if checks.storage.status == 'error' else 'fa-question-circle' }}"></i>
+                        <span>Storage</span>
+                    </div>
+                    <div class="check-toggle">
+                        <i class="fas fa-chevron-down"></i>
+                    </div>
+                </div>
+                <div class="check-body hidden">
+                    <p><strong>Status:</strong> {{ checks.storage.message }}</p>
+                    
+                    {% if checks.storage.details %}
+                    <table class="details-table">
+                        <thead>
+                            <tr>
+                                <th>Item</th>
+                                <th>Value</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for key, value in checks.storage.details.items() %}
+                            <tr>
+                                <td>{{ key }}</td>
+                                <td>{{ value }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                    {% endif %}
+                    
+                    <div class="mt-3">
+                        <p><strong>Recommendations:</strong></p>
+                        <ul>
+                            {% if checks.storage.status == 'ok' %}
+                            <li>Storage is properly configured and has sufficient space.</li>
+                            {% elif checks.storage.status == 'warning' %}
+                            <li>Disk space is running low. Consider freeing up space or expanding storage.</li>
+                            {% elif checks.storage.status == 'error' %}
+                            <li>Critical storage issues detected. The crawler may not function properly.</li>
+                            <li>Ensure the application has write permissions to the exports directory.</li>
+                            {% endif %}
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="actions-section">
+            <div class="card">
+                <h3>Actions</h3>
+                <div class="form-actions">
+                    <a href="/" class="btn primary-btn">
+                        <i class="fas fa-home"></i> Return to Home
+                    </a>
+                    <a href="{{ url_for('check_environment') }}" class="btn secondary-btn">
+                        <i class="fas fa-sync"></i> Run Checks Again
+                    </a>
+                    <a href="{{ url_for('configure') }}" class="btn secondary-btn">
+                        <i class="fas fa-cog"></i> Configure Application
+                    </a>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <p>&copy; 2025 FAIR Signposting Crawler</p>
+    </footer>
+
+    <script>
+        // Toggle check details
+        document.querySelectorAll('.check-header').forEach(header => {
+            header.addEventListener('click', () => {
+                const body = header.nextElementSibling;
+                body.classList.toggle('hidden');
+                
+                const icon = header.querySelector('.check-toggle i');
+                if (body.classList.contains('hidden')) {
+                    icon.className = 'fas fa-chevron-down';
+                } else {
+                    icon.className = 'fas fa-chevron-up';
+                }
+            });
+        });
+    </script>
+</body>
+</html>

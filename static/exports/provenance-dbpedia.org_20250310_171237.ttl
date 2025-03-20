@@ -1,0 +1,65 @@
+@prefix dc: <http://purl.org/dc/elements/1.1/> .
+@prefix dcterms: <http://purl.org/dc/terms/> .
+@prefix foaf: <http://xmlns.com/foaf/0.1/> .
+@prefix prov: <http://www.w3.org/ns/prov#> .
+@prefix schema1: <http://schema.org/> .
+@prefix void: <http://rdfs.org/ns/void#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+<http://example.org/dataset/dbpedia.org_20250310_171237> a void:Dataset,
+        prov:Entity ;
+    dc:source <http://example.org/stats/dbpedia.org_20250310_171237> ;
+    dc:title "Knowledge Graph from FAIR Crawl dbpedia.org_20250310_171237" ;
+    dcterms:created "2025-03-10T17:14:02.955645"^^xsd:dateTime ;
+    void:entities 1 ;
+    void:subset <http://example.org/domain/dbpedia.org_20250310_171237/0>,
+        <http://example.org/domain/dbpedia.org_20250310_171237/1>,
+        <http://example.org/resource/494ad555-8694-4077-9ed6-f10514953213>,
+        <http://example.org/seed/dbpedia.org_20250310_171237/0> ;
+    void:triples 851 ;
+    prov:wasGeneratedBy <http://example.org/crawl/dbpedia.org_20250310_171237> .
+
+<http://example.org/agent/FAIRSignpostingCrawler> a prov:SoftwareAgent,
+        foaf:Agent ;
+    dc:description "A web crawler that follows Signposting links to discover FAIR data" ;
+    prov:actedOnBehalfOf <http://example.org/organization/YourOrganization> ;
+    foaf:name "FAIR Signposting Crawler" .
+
+<http://example.org/domain/dbpedia.org_20250310_171237/0> a prov:Entity ;
+    void:entities 5 ;
+    schema1:URL "http://dbpedia.org" ;
+    foaf:name "dbpedia.org" .
+
+<http://example.org/domain/dbpedia.org_20250310_171237/1> a prov:Entity ;
+    void:entities 1 ;
+    schema1:URL "http://creativecommons.org" ;
+    foaf:name "creativecommons.org" .
+
+<http://example.org/resource/494ad555-8694-4077-9ed6-f10514953213> a prov:Entity ;
+    dc:source <http://dbpedia.org/data/Semantic_Web.rdf> ;
+    dc:type "signposting:alternate" ;
+    dcterms:created "2025-03-10T17:12:56.488263"^^xsd:dateTime ;
+    schema1:position 0 ;
+    prov:value 851 ;
+    prov:wasGeneratedBy <http://example.org/crawl/dbpedia.org_20250310_171237> .
+
+<http://example.org/crawl/dbpedia.org_20250310_171237> a prov:Activity ;
+    dc:description "A web crawl following FAIR Signposting links to build a knowledge graph" ;
+    dc:title "FAIR Signposting Crawl dbpedia.org_20250310_171237" ;
+    schema1:duration 85.377838 ;
+    prov:endedAtTime "2025-03-10T17:14:02.955645"^^xsd:dateTime ;
+    prov:generated <http://example.org/stats/dbpedia.org_20250310_171237> ;
+    prov:startedAtTime "2025-03-10T17:12:37.577807"^^xsd:dateTime ;
+    prov:used <http://example.org/seed/dbpedia.org_20250310_171237/0> ;
+    prov:wasAssociatedWith <http://example.org/agent/FAIRSignpostingCrawler> .
+
+<http://example.org/seed/dbpedia.org_20250310_171237/0> a void:Dataset,
+        prov:Entity ;
+    dc:source <https://dbpedia.org/page/Semantic_Web> ;
+    void:rootResource <https://dbpedia.org/page/Semantic_Web> .
+
+<http://example.org/stats/dbpedia.org_20250310_171237> a prov:Entity ;
+    schema1:fallbackUsed 4 ;
+    schema1:name "Signposting Statistics" ;
+    schema1:signpostingFound 2 .
+
